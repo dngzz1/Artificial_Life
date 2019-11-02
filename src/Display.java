@@ -42,7 +42,13 @@ class Display implements Runnable, KeyListener {
 	static boolean drawFollowHighlight = false;
 	static boolean isAcceleratedModeOn = false;
 	static boolean isDisplayOn = true;
-	static boolean spawnNewCells = true;
+	static boolean spawnNewCells = false;
+	
+	
+	// XXX //
+	static boolean useNewCellDefinitions = true;
+	// XXX //
+	
 	
 	public static void draw(){
 		Graphics2D g = (Graphics2D)frame.getBufferStrategy().getDrawGraphics();
@@ -84,6 +90,9 @@ class Display implements Runnable, KeyListener {
 		int cellCount = 0;
 		for(Stepable stepable : stepList){
 			if(stepable instanceof Cell){
+				cellCount ++;
+			}
+			if(stepable instanceof Cell2){
 				cellCount ++;
 			}
 		}
@@ -196,6 +205,12 @@ class Display implements Runnable, KeyListener {
 		} else return false;
 	}
 	
+	public static boolean placeRandomly(WorldObject object){
+		int x = M.randInt(width - 1);
+		int y = M.randInt(height - 1);
+		return place(object, new Point(x, y));
+	}
+	
 	public static void printGenerationToFile(){
 		System.out.println("PRINTING LOG");
 		Date date = new Date();
@@ -225,17 +240,6 @@ class Display implements Runnable, KeyListener {
 		System.out.println("BEST CELL IS #"+bestCell+" WITH "+mostFoodEaten+" FOOD EATEN");
 		System.out.println("OLDEST CELL IS #"+oldestCell+" AT "+longestLife+" TICKS");
 		System.out.println();
-	}
-	
-	public static void randomlyPlaceCell(Cell cell){
-		int x = M.randInt(width - 1);
-		int y = M.randInt(height - 1);
-		place(cell, x, y);
-	}
-	
-	public static void randomlyPlaceFood(){
-		Point location = new Point(M.randInt(width-1), M.randInt(height-1));
-		place(new Food(), location);
 	}
 	
 	public static void selectNextCell() {
@@ -375,7 +379,11 @@ class Display implements Runnable, KeyListener {
 		
 		// Spawn new cells if the population is too low. //
 		if(spawnNewCells && getCellCount() < minCellCount){
-			randomlyPlaceCell(new Cell());
+			if(useNewCellDefinitions) {
+				placeRandomly(new Cell2());
+			} else {
+				placeRandomly(new Cell());
+			}
 		}
 		
 		stepCounter ++;
@@ -448,6 +456,11 @@ class Display implements Runnable, KeyListener {
 		}
 		if(e.getKeyChar() == '*'){
 			drawFollowHighlight = !drawFollowHighlight;
+		}
+		if(e.getKeyChar() == 'q') {//XXX//
+//			placeRandomly(new Cell2());
+			
+			
 		}
 	}
 	

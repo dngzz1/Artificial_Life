@@ -54,7 +54,6 @@ class Cell extends WorldObject implements Stepable {
 	LinkedList<Neuron> conceptNeuronList = new LinkedList<Neuron>();
 	
 	
-	
 	private static Neuron chooseNeuronToMutate(LinkedList<Neuron> list){
 		if(list.isEmpty()){
 			return null;
@@ -623,7 +622,7 @@ class Cell extends WorldObject implements Stepable {
 		for(Organ organ : organList){
 			organ.stepSensoryNeurons();
 		}
-		
+
 		// Recalculate input strength for all neurons. //
 		for(Neuron neuron : neuronList){
 			// Set input strenth to off. //
@@ -633,7 +632,7 @@ class Cell extends WorldObject implements Stepable {
 			// Push output strength to connections if firing. //
 			neuron.calculateConnections();
 		}
-		
+
 		// Decide whether each neuron should be firing based on the new input strength. //
 		for(Neuron neuron : neuronList){
 			neuron.isFiring = neuron.isThresholdCrossed();
@@ -642,12 +641,12 @@ class Cell extends WorldObject implements Stepable {
 		for(Organ organ : organList){
 			organ.fireSensoryNeurons();
 		}
-		
+
 		// Decide on action based upon which motor neurons are firing. //
 		for(Organ organ : organList){
 			organ.stepMotorNeurons();
 		}
-		
+			
 		// Life and energy. //
 		lifetime ++;
 		energy -= energyCostPerTick + neuronList.size()*energyCostPerNeuron;

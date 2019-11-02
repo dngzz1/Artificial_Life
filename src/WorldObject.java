@@ -41,7 +41,9 @@ abstract class WorldObject {
 	public abstract Color getColor();
 	
 	public Point getAdjacentLocation(Direction direction) {
-		return M.add(direction.getVector(), getLocation());
+		Point adjacentLocation = M.add(direction.getVector(), getLocation());
+		Display.wrapPoint(adjacentLocation);
+		return adjacentLocation;
 	}
 	
 	public Point getLocation() {

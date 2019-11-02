@@ -31,6 +31,12 @@ class InfoWindow extends JFrame {
 					latestGeneration = cell.generation;
 				}
 			}
+			if(stepable instanceof Cell2){
+				Cell2 cell = (Cell2)stepable;
+				if(cell.generation > latestGeneration){
+					latestGeneration = cell.generation;
+				}
+			}
 		}
 		return latestGeneration;
 	}
@@ -44,6 +50,12 @@ class InfoWindow extends JFrame {
 					oldestGeneration = cell.generation;
 				}
 			}
+			if(stepable instanceof Cell2){
+				Cell2 cell = (Cell2)stepable;
+				if(cell.generation < oldestGeneration){
+					oldestGeneration = cell.generation;
+				}
+			}
 		}
 		return oldestGeneration;
 	}
@@ -53,6 +65,12 @@ class InfoWindow extends JFrame {
 		for(Stepable stepable : Display.stepList){
 			if(stepable instanceof Cell){
 				Cell cell = (Cell)stepable;
+				if(cell.generation == generation){
+					cellCount ++;
+				}
+			}
+			if(stepable instanceof Cell2){
+				Cell2 cell = (Cell2)stepable;
 				if(cell.generation == generation){
 					cellCount ++;
 				}
