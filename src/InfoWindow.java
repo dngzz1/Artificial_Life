@@ -24,7 +24,7 @@ class InfoWindow extends JFrame {
 	
 	private int getLatestGeneration(){
 		int latestGeneration = 0;
-		for(Stepable stepable : Display.stepList){
+		for(Stepable stepable : ArtificialLife.stepList){
 			if(stepable instanceof Cell){
 				Cell cell = (Cell)stepable;
 				if(cell.generation > latestGeneration){
@@ -43,7 +43,7 @@ class InfoWindow extends JFrame {
 	
 	private int getOldestGeneration(){
 		int oldestGeneration = Integer.MAX_VALUE;
-		for(Stepable stepable : Display.stepList){
+		for(Stepable stepable : ArtificialLife.stepList){
 			if(stepable instanceof Cell){
 				Cell cell = (Cell)stepable;
 				if(cell.generation < oldestGeneration){
@@ -62,7 +62,7 @@ class InfoWindow extends JFrame {
 	
 	private int getGenerationCount(int generation){
 		int cellCount = 0;
-		for(Stepable stepable : Display.stepList){
+		for(Stepable stepable : ArtificialLife.stepList){
 			if(stepable instanceof Cell){
 				Cell cell = (Cell)stepable;
 				if(cell.generation == generation){
@@ -86,24 +86,25 @@ class InfoWindow extends JFrame {
 	public void update(){
 		String infoText = "<html>";
 		
-		infoText = infoText+"Step Counter = "+Display.stepCounter+"<br>";
-		infoText = infoText+"Number of cells = "+Display.getCellCount()+"<br>";
-		infoText = infoText+"spawning = "+(Display.spawnNewCells ? "ON" : "OFF")+"<br>";
+		infoText += "Step Counter = "+ArtificialLife.stepCounter+"<br>";
+		infoText += "Number of cells = "+ArtificialLife.getCellCount()+"<br>";
+		infoText += "spawning = "+(ArtificialLife.spawnNewCells ? "ON" : "OFF")+"<br>";
 		int latestGeneration = getLatestGeneration();
 		int oldestGeneration = getOldestGeneration();
-		infoText = infoText+"Latest generation = "+latestGeneration+" with "+getGenerationCount(latestGeneration)+" cells."+"<br>";
-		infoText = infoText+"Oldest generation = "+oldestGeneration+" with "+getGenerationCount(oldestGeneration)+" cells."+"<br>";
+		infoText += "Latest generation = "+latestGeneration+" with "+getGenerationCount(latestGeneration)+" cells."+"<br>";
+		infoText += "Oldest generation = "+oldestGeneration+" with "+getGenerationCount(oldestGeneration)+" cells."+"<br>";
+		infoText += "Total Children = "+ArtificialLife.totalChildren+"<br>";
 		
 		if(followedCell == null){
-			infoText = infoText+"Not following cell"+"<br>";
+			infoText += "Not following cell"+"<br>";
 		} else {
-			infoText = infoText+"Following cell #"+Display.getCellIndex(followedCell)+"<br>";
-			infoText = infoText+"generation = "+followedCell.generation+"<br>";
-			infoText = infoText+"energy = "+followedCell.energy+"<br>";
-			infoText = infoText+"lifetime = "+followedCell.lifetime+"<br>";
-			infoText = infoText+"food eaten = "+followedCell.lifetimeFoodEaten+"<br>"; 
-			infoText = infoText+"number of childern = "+followedCell.children+"<br>"; 
-			infoText = infoText+"organs = "+followedCell.organList.size()+"<br>";
+			infoText += "Following cell #"+ArtificialLife.getCellIndex(followedCell)+"<br>";
+			infoText += "generation = "+followedCell.generation+"<br>";
+			infoText += "energy = "+followedCell.energy+"<br>";
+			infoText += "lifetime = "+followedCell.lifetime+"<br>";
+			infoText += "food eaten = "+followedCell.lifetimeFoodEaten+"<br>"; 
+			infoText += "number of childern = "+followedCell.children+"<br>"; 
+			infoText += "organs = "+followedCell.organList.size()+"<br>";
 			
 			String organInfoText = "<html>";
 			for(Organ organ : followedCell.organList){
@@ -113,7 +114,7 @@ class InfoWindow extends JFrame {
 			organInfoLabel.setText(organInfoText);
 		}
 		
-		infoText = infoText+"</html>";
+		infoText += "</html>";
 		
 		infoLabel.setText(infoText);
 		

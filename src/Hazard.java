@@ -8,18 +8,18 @@ class Hazard extends WorldObject {
 		return color;
 	}
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
 		case PUSH:
-			interacter.interact(this, Interaction.KILL);
+			interacter.interact(this, Interaction.KILL, null);
 			return true;
 		case EAT:
-			interacter.interact(this, Interaction.KILL);
+			interacter.interact(this, Interaction.KILL, null);
 			return true;
 		case PULL:
-			return pull(interacter, this);
+			interacter.interact(this, Interaction.KILL, null);
 		case DISPLACE:
-			interacter.interact(this, Interaction.KILL);
+			interacter.interact(this, Interaction.KILL, null);
 			return true;
 		default:
 			return false;

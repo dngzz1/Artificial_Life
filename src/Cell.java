@@ -185,26 +185,12 @@ class Cell extends WorldObject implements Stepable {
 		}
 	}
 	
-	void attemptBirth(Direction direction, int energyPassedToChild){
-		int energyCost = birthEnergyRequirement + energyPassedToChild;
-		if(energy > energyCost){
-			Point p = M.add(direction.getVector(), location);
-			Cell child = cloneAndMutate(this);
-			boolean placedSuccessfully = Display.place(child, p);
-			if(placedSuccessfully){
-				energy -= energyCost;
-				child.energy = energyPassedToChild;
-				children ++;
-			}
-		}
-	}
-	
 	boolean displace(){
 		Point targetPoint = getAdjacentLocation(facing);
-		Display.wrapPoint(targetPoint);
-		WorldObject target = Display.grid[targetPoint.x][targetPoint.y];
+		ArtificialLife.wrapPoint(targetPoint);
+		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
 		if(target != null){
-			return target.interact(this, Interaction.DISPLACE);
+			return target.interact(this, Interaction.DISPLACE, null);
 		} else {
 			return false;
 		}
@@ -218,10 +204,10 @@ class Cell extends WorldObject implements Stepable {
 	
 	boolean eat() {
 		Point targetPoint = getAdjacentLocation(facing);
-		Display.wrapPoint(targetPoint);
-		WorldObject target = Display.grid[targetPoint.x][targetPoint.y];
+		ArtificialLife.wrapPoint(targetPoint);
+		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
 		if(target != null){
-			return target.interact(this, Interaction.EAT);
+			return target.interact(this, Interaction.EAT, null);
 		} else {
 			return false;
 		}
@@ -246,15 +232,15 @@ class Cell extends WorldObject implements Stepable {
 	}
 
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
 		case PUSH:
 			push(interacter, this);
 			return true;
-		case GIVE_FOOD_ENERGY:
-			int foodValue = Food.energyGainPerFood;
-			energy = Math.min(energy + foodValue, maxStoredEnergy);
-			lifetimeFoodEaten += foodValue;
+		case GIVE_ENERGY:
+			int amount = (Integer)data;
+			energy = Math.min(energy + amount, maxStoredEnergy);
+			lifetimeFoodEaten += amount;
 			return true;
 		case KILL:
 			kill();
@@ -269,8 +255,8 @@ class Cell extends WorldObject implements Stepable {
 	}
 	
 	void kill(){
-		Display.stepList.remove(this);
-		Display.grid[location.x][location.y] = null;
+		ArtificialLife.stepList.remove(this);
+		ArtificialLife.grid[location.x][location.y] = null;
 	}
 	
 	private Color loadColorData(String data){
@@ -364,12 +350,12 @@ class Cell extends WorldObject implements Stepable {
 	}
 	
 	boolean moveTo(Point p){
-		Display.wrapPoint(p);
-		if(Display.grid[p.x][p.y] == null){
+		ArtificialLife.wrapPoint(p);
+		if(ArtificialLife.grid[p.x][p.y] == null){
 			setLocation(p);
 			return true;
 		} else {
-			return Display.grid[p.x][p.y].interact(this, Interaction.PUSH);
+			return ArtificialLife.grid[p.x][p.y].interact(this, Interaction.PUSH, null);
 		}
 	}
 	
@@ -549,10 +535,10 @@ class Cell extends WorldObject implements Stepable {
 	
 	boolean pull() {
 		Point targetPoint = getAdjacentLocation(facing);
-		Display.wrapPoint(targetPoint);
-		WorldObject target = Display.grid[targetPoint.x][targetPoint.y];
+		ArtificialLife.wrapPoint(targetPoint);
+		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
 		if(target != null){
-			return target.interact(this, Interaction.PULL);
+			return target.interact(this, Interaction.PULL, null);
 		} else {
 			return false;
 		}
@@ -616,8 +602,24 @@ class Cell extends WorldObject implements Stepable {
 		defaultReproductionOrgan.motorNeuron_spawn.threshold = 0.9f;
 	}
 	
+	void spawn(Direction direction, int energyPassedToChild){
+		int energyCost = birthEnergyRequirement + energyPassedToChild;
+		if(energy > energyCost){
+			Point p = M.add(direction.getVector(), location);
+			Cell child = cloneAndMutate(this);
+			boolean placedSuccessfully = ArtificialLife.place(child, p);
+			if(placedSuccessfully){
+				energy -= energyCost;
+				child.energy = energyPassedToChild;
+				children ++;
+				ArtificialLife.totalChildren ++;
+			}
+		}
+	}
+	
 	@Override
 	public void step(){
+		
 		// Set sensory neuron output strength. //
 		for(Organ organ : organList){
 			organ.stepSensoryNeurons();

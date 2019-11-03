@@ -86,9 +86,9 @@ class Organ_Location extends Organ {
 	}
 	
 	void stepSensoryNeurons() {
-		sensoryNeuron_x.firingStrength = (float) owner.getX() / (float) Display.width;
+		sensoryNeuron_x.firingStrength = (float) owner.getX() / (float) ArtificialLife.width;
 		sensoryNeuron_x.isFiring = true;
-		sensoryNeuron_y.firingStrength = (float) owner.getY() / (float) Display.height;
+		sensoryNeuron_y.firingStrength = (float) owner.getY() / (float) ArtificialLife.height;
 		sensoryNeuron_y.isFiring = true;
 	}
 	

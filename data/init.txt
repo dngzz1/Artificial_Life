@@ -4,8 +4,8 @@
 fpsCap=30
 // Maximum frames per second when not in accelerated mode.
 
-map=map2.png
-// The map to use. The image dimensions give the size of the world. A wall is placed at each black pixel.
+map=map4.png
+// The map to use. The image dimensions give the size of the world. Objects are placed in the world according to pixel color.
 
 drawScale=3
 // The size each grid square is drawn, in pixels.
@@ -25,7 +25,7 @@ energyGainPerFood=2500
 maxStoredEnergy=250000
 // The maximum amount of energy a cell can store.
 
-birthEnergyRequirement=5000
+birthEnergyRequirement=2500
 // The amount of energy used when a cell produces a child (in addition to energy transferred to the child).
 
 energyUponBirth=10000

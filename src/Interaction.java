@@ -1,7 +1,7 @@
 enum Interaction {
 	EAT,
 	DISPLACE,
-	GIVE_FOOD_ENERGY,
+	GIVE_ENERGY,
 	KILL,
 	PULL,
 	PUSH,

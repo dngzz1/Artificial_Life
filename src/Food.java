@@ -14,24 +14,24 @@ class Food extends WorldObject {
 	}
 
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
-		case PUSH:
-			return push(interacter, this);
+		case DISPLACE:
+			return displace(interacter, this);
 		case EAT:
-			interacter.interact(this, Interaction.GIVE_FOOD_ENERGY);
+			interacter.interact(this, Interaction.GIVE_ENERGY, Integer.valueOf(energyGainPerFood));
 			remove();
 			return true;
 		case PULL:
 			return pull(interacter, this);
-		case DISPLACE:
-			return displace(interacter, this);
+		case PUSH:
+			return push(interacter, this);
 		default:
 			return false;
 		}
 	}
 	
 	private void remove() {
-		Display.grid[location.x][location.y] = null;
+		ArtificialLife.grid[location.x][location.y] = null;
 	}
 }

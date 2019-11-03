@@ -9,7 +9,7 @@ class Plant extends WorldObject implements Stepable {
 	private void fruit() {
 		int x = M.randInt(location.x - 1, location.x + 1);
 		int y = M.randInt(location.y - 1, location.y + 1);
-		Display.place(new Food(), x, y);
+		ArtificialLife.place(new Food(), x, y);
 	}
 	
 	@Override
@@ -17,7 +17,7 @@ class Plant extends WorldObject implements Stepable {
 		return color;
 	}
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
 		case PUSH:
 			return push(interacter, this);

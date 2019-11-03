@@ -16,7 +16,7 @@ class Wall extends WorldObject {
 	}
 
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
 		case PUSH:
 			return push(interacter, this);

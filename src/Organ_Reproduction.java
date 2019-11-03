@@ -90,7 +90,7 @@ class Organ_Reproduction extends Organ {
 	@Override
 	void stepMotorNeurons() {
 		if(motorNeuron_spawn.isFiring){
-			owner.attemptBirth(owner.facing, energyPassedToChild);
+			owner.spawn(owner.facing, energyPassedToChild);
 		}
 	}
 

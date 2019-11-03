@@ -118,8 +118,8 @@ class Organ_Eye extends Organ {
 			}
 			p.x += d.x;
 			p.y += d.y;
-			Display.wrapPoint(p);
-			object = Display.grid[p.x][p.y];
+			ArtificialLife.wrapPoint(p);
+			object = ArtificialLife.grid[p.x][p.y];
 			if(object != null){
 				break;
 			}

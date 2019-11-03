@@ -21,6 +21,27 @@ class M extends maths.M {
 		}
 		return clone;
 	}
+
+	static double[][] mergeMatrices(double[][] matrix1, double[][] matrix2){
+		if(matrix1.length == 0) {
+			return new double[0][0];
+		} else {
+			double[][] clone = new double[matrix1.length][matrix1[0].length];
+			for(int row = 0; row < matrix1.length; row ++) {
+				for(int col = 0; col < matrix1[row].length; col ++) {
+					clone[row][col] = (M.roll(0.5)) ? matrix1[row][col] : matrix2[row][col];
+				}
+			}
+			return clone;
+		}
+	}
+	static double[] mergeVectors(double[] vector1, double[] vector2){
+		double[] clone = new double[vector1.length];
+		for(int i = 0; i < vector1.length; i ++) {
+			clone[i] = (M.roll(0.5)) ? vector1[i] : vector2[i];
+		}
+		return clone;
+	}
 	
 	static float mutateFloat(float value){
 		float dice = M.randf(1.0f);
