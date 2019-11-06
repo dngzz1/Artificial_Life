@@ -10,6 +10,7 @@ import java.util.LinkedList;
 
 import javax.swing.*;
 
+import files.TextFileHandler;
 import maths.M;
 
 class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
@@ -199,7 +200,8 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 	private void loadFile(File file){
 		if(file != null){
 			frame.setTitle(windowTitle+" - "+file.getPath());
-			loadCell(new Cell(file));
+			LinkedList<String> lineList = TextFileHandler.readEntireFile(file.getPath());
+			loadCell(new Cell(lineList));
 		}
 	}
 	

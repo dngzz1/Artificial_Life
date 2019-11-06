@@ -3,14 +3,15 @@ DESIGN DOCUMENT: Artificial Life
 
 ~~ TO-DO ~~
 
-> More interactions. E.g. cells eating other cells.
+> Improved saving/loading. Separate handling the map and the cells. More options.
 > More varied food sources for cells.
 > Introduce systems which cause change to the environment over time.
 > Improve performance by reducing info window refresh rate during accelerated mode.
+> Allow larger maps and have the display show only a scrollable section of the map.
 > ASCII display mode.
 > Improved cell-selecter: implement cursor for viewing/selecting world objects.
 > Implement chemistry system.
 
 ~~ Bugs ~~
 
-> Loading cells from file does not work.
+> Loading multiple cells from file does not work properly.

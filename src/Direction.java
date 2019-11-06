@@ -23,6 +23,15 @@ enum Direction {
 		return null;
 	}
 	
+	public static Direction parseDir(String string) {
+		for(Direction dir : values()) {
+			if(dir.name().equals(string)) {
+				return dir;
+			}
+		}
+		return null;
+	}
+	
 	public Point getVector(){
 		return vectorList[ordinal()];
 	}

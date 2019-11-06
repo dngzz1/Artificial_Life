@@ -1,6 +1,9 @@
 import java.awt.Color;
 import java.awt.Point;
+import java.io.PrintWriter;
 import java.util.LinkedList;
+
+import files.TextFileHandler;
 
 class Cell2 extends WorldObject implements Stepable {
 	static Color[] validCellColors = validCellColors();
@@ -12,9 +15,9 @@ class Cell2 extends WorldObject implements Stepable {
 	// Cell Metadata //
 	int generation = 0;
 	int children = 0;
+	int lifetimeFoodEaten = 0;
 	
 	// Cell Data //
-//	Color color;
 	int col;
 	int energyPassedToChild;
 	
@@ -41,6 +44,37 @@ class Cell2 extends WorldObject implements Stepable {
 	double[] motorBias = new double[motorNeurons.length];
 	double[][] conceptMemoryConnections = new double[memoryNeurons.length][conceptNeurons.length];
 	double[] memoryBias = new double[memoryNeurons.length];
+	
+	private static Cell2 createChild(Cell2 parent) {
+		Cell2 child = new Cell2(parent);
+		child.generation = parent.generation + 1;
+		child.mutate();
+		return child;
+	}
+	
+	private static Cell2 createChild(Cell2 parent1, Cell2 parent2) {
+		Cell2 child = new Cell2(parent1, parent2);
+		child.generation = Math.max(parent1.generation, parent2.generation) + 1;
+		child.mutate();
+		return child;
+	}
+	
+	private static double[][] loadMatrix(LinkedList<String> dataLineList, int rows) {
+		double[][] matrix = new double[rows][];
+		for(int row = 0; row < matrix.length; row ++) {
+			matrix[row] = loadVector(dataLineList.remove());
+		}
+		return matrix;
+	}
+	
+	private static double[] loadVector(String dataString) {
+		String[] data = dataString.split(";");
+		double[] vector = new double[data.length];
+		for(int i = 0; i < vector.length; i ++) {
+			vector[i] = Double.parseDouble(data[i]);
+		}
+		return vector;
+	}
 	
 	private static int mutate(int value, double probability) {
 		if(M.roll(probability)) {
@@ -87,6 +121,19 @@ class Cell2 extends WorldObject implements Stepable {
 			col = (col + validCellColors.length + delta)%validCellColors.length;
 		}
 		return col;
+	}
+	
+	private static void printMatrix(PrintWriter pw, double[][] matrix) {
+		for(int row = 0; row < matrix.length; row ++) {
+			printVector(pw, matrix[row]);
+		}
+	}
+	
+	private static void printVector(PrintWriter pw, double[] vector) {
+		for(int i = 0; i < vector.length; i ++) {
+			pw.print(vector[i]+";");
+		}
+		pw.println();
 	}
 	
 	private static final Color[] validCellColors() {
@@ -169,6 +216,68 @@ class Cell2 extends WorldObject implements Stepable {
 		memoryBias = M.mergeVectors(parent1.memoryBias, parent2.memoryBias);
 	}
 	
+	Cell2(LinkedList<String> lineList){
+		// Cell metadata //
+		lineList.remove();
+		generation = Integer.parseInt(lineList.remove());
+		lineList.remove();
+		children = Integer.parseInt(lineList.remove());
+		lineList.remove();
+		lifetimeFoodEaten = Integer.parseInt(lineList.remove());
+		
+		// Cell data //
+		lineList.remove();
+		col = Integer.parseInt(lineList.remove());
+		lineList.remove();
+		energyPassedToChild = Integer.parseInt(lineList.remove());
+		
+		// Cell variables //
+		lineList.remove();
+		int x = Integer.parseInt(lineList.remove());
+		lineList.remove();
+		int y = Integer.parseInt(lineList.remove());
+		location = new Point(x, y);
+		lineList.remove();
+		facing = Direction.parseDir(lineList.remove());
+		lineList.remove();
+		energy = Integer.parseInt(lineList.remove());
+		lineList.remove();
+		lifetime = Integer.parseInt(lineList.remove());
+		lineList.remove();
+		isDead = Boolean.parseBoolean(lineList.remove());
+		lineList.remove();
+		mate = null;lineList.remove(); // TODO - reassign mates after loading from file.
+		
+		// Neuron data //
+		// Strictly, we only need the neuron data values for memory neurons. For the rest, the neuron count is sufficient.
+		lineList.remove();
+		sensoryNeurons = loadVector(lineList.remove());
+		lineList.remove();
+		memoryNeurons = loadVector(lineList.remove());
+		lineList.remove();
+		conceptNeurons = loadVector(lineList.remove());
+		lineList.remove();
+		motorNeurons = loadVector(lineList.remove());
+		
+		// Neuron connections layer 1 //
+		lineList.remove();
+		sensoryConceptConnections = loadMatrix(lineList, conceptNeurons.length);
+		lineList.remove();
+		memoryConceptConnections = loadMatrix(lineList, conceptNeurons.length);
+		lineList.remove();
+		conceptBias = loadVector(lineList.remove());
+		
+		// Neuron connections layer 2 //
+		lineList.remove();
+		conceptMotorConnections = loadMatrix(lineList, motorNeurons.length);
+		lineList.remove();
+		motorBias = loadVector(lineList.remove());
+		lineList.remove();
+		conceptMemoryConnections = loadMatrix(lineList, memoryNeurons.length);
+		lineList.remove();
+		memoryBias = loadVector(lineList.remove());
+	}
+	
 	@Override
 	protected Cell2 clone() {
 		return new Cell2(this);
@@ -213,7 +322,7 @@ class Cell2 extends WorldObject implements Stepable {
 		case GIVE_ENERGY:
 			int amount = (Integer)data;
 			energy = Math.min(energy + amount, Cell.maxStoredEnergy);
-//			lifetimeFoodEaten += foodValue;
+			lifetimeFoodEaten += amount;
 			return true;
 		case KILL:
 			kill();
@@ -272,6 +381,72 @@ class Cell2 extends WorldObject implements Stepable {
 		
 	}
 	
+	void printToFile(String filename){
+		PrintWriter pw = TextFileHandler.startWritingToFile(filename);
+		pw.println("Cell2 #"+ArtificialLife.getCellIndex(this));
+		
+		// Cell metadata //
+		pw.println("generation=");
+		pw.println(generation);
+		pw.println("children=");
+		pw.println(children);
+		pw.println("lifetimeFoodEaten=");
+		pw.println(lifetimeFoodEaten);
+		
+		// Cell data //
+		pw.println("col=");
+		pw.println(col);
+		pw.println("energyPassedToChild=");
+		pw.println(energyPassedToChild);
+		
+		// Cell variables //
+		pw.println("x=");
+		pw.println(location.x);
+		pw.println("y=");
+		pw.println(location.y);
+		pw.println("facing=");
+		pw.println(facing.name());
+		pw.println("energy=");
+		pw.println(energy);
+		pw.println("lifetime=");
+		pw.println(lifetime);
+		pw.println("isDead=");
+		pw.println(isDead);
+		pw.println("mate=");
+		pw.println(ArtificialLife.getCellIndex(mate));
+		
+		// Neuron data //
+		pw.println("sensoryNeurons=");
+		printVector(pw, sensoryNeurons);
+		pw.println("memoryNeurons=");
+		printVector(pw, memoryNeurons);
+		pw.println("conceptNeurons=");
+		printVector(pw, conceptNeurons);
+		pw.println("motorNeurons=");
+		printVector(pw, motorNeurons);
+		
+		// Neuron connections layer 1 //
+		pw.println("sensoryConceptConnections=");
+		printMatrix(pw, sensoryConceptConnections);
+		pw.println("memoryConceptConnections=");
+		printMatrix(pw, memoryConceptConnections);
+		pw.println("conceptBias=");
+		printVector(pw, conceptBias);
+		
+		// Neuron connections layer 2 //
+		pw.println("conceptMotorConnections=");
+		printMatrix(pw, conceptMotorConnections);
+		pw.println("motorBias=");
+		printVector(pw, motorBias);
+		pw.println("conceptMemoryConnections=");
+		printMatrix(pw, conceptMemoryConnections);
+		pw.println("memoryBias=");
+		printVector(pw, memoryBias);
+		
+		// Done //
+		pw.close();
+	}
+	
 	private boolean pull() {
 		Point targetPoint = getAdjacentLocation(facing);
 		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
@@ -328,14 +503,15 @@ class Cell2 extends WorldObject implements Stepable {
 		int energyCost = Cell.birthEnergyRequirement + energyPassedToChild;
 		if(energy > energyCost){
 			Point p = M.add(direction.getVector(), location);
-			Cell2 child = (mate == null) ? clone() : new Cell2(this, mate);
-			child.generation = generation + 1;
-			child.mutate();
+			Cell2 child = (mate == null) ? createChild(this) : createChild(this, mate);
 			boolean placedSuccessfully = ArtificialLife.place(child, p);
 			if(placedSuccessfully){
 				energy -= energyCost;
 				child.energy = energyPassedToChild;
 				children ++;
+				if(mate != null) {
+					mate.children ++;
+				}
 				ArtificialLife.totalChildren ++;
 				return true;
 			}

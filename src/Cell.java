@@ -1,7 +1,6 @@
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.LinkedList;
 
@@ -120,9 +119,8 @@ class Cell extends WorldObject implements Stepable {
 		}
 	}
 	
-	Cell(File file){
-		// Read the file and split into the three sets of data: variables, organs and neurons. //
-		LinkedList<String> lineList = TextFileHandler.readEntireFile(file.getPath());
+	Cell(LinkedList<String> lineList){
+		// Split the lines  into the three sets of data: variables, organs and neurons. //
 		String[] data = lineList.remove().split(";");
 		LinkedList<String> organData = new LinkedList<String>();
 		while(!lineList.getFirst().startsWith("N")){
@@ -510,6 +508,8 @@ class Cell extends WorldObject implements Stepable {
 	
 	void printToFile(String filename){
 		PrintWriter pw = TextFileHandler.startWritingToFile(filename);
+		pw.println("Cell #"+ArtificialLife.getCellIndex(this));
+		
 		// Print variables in first line, separated by ";". //
 		pw.print(";generation="+generation);
 		pw.print(";children="+children);

@@ -66,6 +66,25 @@ class ArtificialLife implements Runnable, KeyListener {
 				}
 				index ++;
 			}
+			if(stepable instanceof Cell2){
+				index ++;
+			}
+		}
+		return -1;
+	}
+	
+	public static int getCellIndex(Cell2 cell){
+		int index = 0;
+		for(Stepable stepable : stepList){
+			if(stepable instanceof Cell){
+				index ++;
+			}
+			if(stepable instanceof Cell2){
+				if(stepable == cell){
+					return index;
+				}
+				index ++;
+			}
 		}
 		return -1;
 	}
@@ -126,13 +145,24 @@ class ArtificialLife implements Runnable, KeyListener {
 			grid = new WorldObject[width][height];
 			
 			// Load and place the cell. //
-			Cell loadedCell = new Cell(file);
-			Point p = loadedCell.getLocation();
-			boolean placedSuccessfully = place(loadedCell, p);
-			while(!placedSuccessfully) {
-				p.x = M.randInt(width-1);
-				p.y = M.randInt(height-1);
-				placedSuccessfully = place(loadedCell, p);
+			LinkedList<String> lineList = TextFileHandler.readEntireFile(file.getPath());
+			String cellType = lineList.remove();
+			WorldObject loadedCell = null;
+			if(cellType.startsWith("Cell #")) {
+				loadedCell = new Cell(lineList);
+			} else if(cellType.startsWith("Cell2 #")) {
+				loadedCell = new Cell2(lineList);
+			}
+			if(loadedCell != null) {
+				Point p = loadedCell.getLocation();
+				boolean placedSuccessfully = place(loadedCell, p);
+				while(!placedSuccessfully) {
+					p.x = M.randInt(width-1);
+					p.y = M.randInt(height-1);
+					placedSuccessfully = place(loadedCell, p);
+				}
+			} else {
+				System.out.println("ERROR LOADING CELL FROM FILE: "+file.getPath());
 			}
 			
 			// Set up the new world. //
@@ -177,28 +207,53 @@ class ArtificialLife implements Runnable, KeyListener {
 		String filename = "logs/log_"+date.getTime();
 
 		int mostFoodEaten = 0;
-		int bestCell = 0;
+		int bestCell_foodEaten = 0;
+		int mostChildren = 0;
+		int bestCell_children = 0;
 		int longestLife = 0;
-		int oldestCell = 0;
+		int bestCell_oldest = 0;
 		int i = 0;
 		for(Stepable stepable : stepList){
 			if(stepable instanceof Cell){
 				Cell cell = (Cell)stepable;
 				cell.printToFile(filename+"/cell"+i+".txt");
 				if(cell.lifetimeFoodEaten > mostFoodEaten){
-					bestCell = i;
+					bestCell_foodEaten = i;
 					mostFoodEaten = cell.lifetimeFoodEaten;
 				}
+				if(cell.children > mostChildren){
+					bestCell_children = i;
+					mostChildren = cell.children;
+				}
 				if(cell.lifetime > longestLife){
-					oldestCell = i;
+					bestCell_oldest = i;
+					longestLife = cell.lifetime;
+				}
+				i ++;
+			}
+			if(stepable instanceof Cell2){
+				Cell2 cell = (Cell2)stepable;
+				cell.printToFile(filename+"/cell"+i+".txt");
+				if(cell.lifetimeFoodEaten > mostFoodEaten){
+					bestCell_foodEaten = i;
+					mostFoodEaten = cell.lifetimeFoodEaten;
+				}
+				if(cell.children > mostChildren){
+					bestCell_children = i;
+					mostChildren = cell.children;
+				}
+				if(cell.lifetime > longestLife){
+					bestCell_oldest = i;
 					longestLife = cell.lifetime;
 				}
 				i ++;
 			}
 		}
 		System.out.println("DONE PRINTING LOG");
-		System.out.println("BEST CELL IS #"+bestCell+" WITH "+mostFoodEaten+" FOOD EATEN");
-		System.out.println("OLDEST CELL IS #"+oldestCell+" AT "+longestLife+" TICKS");
+		System.out.println("BEST CELLS ARE:");
+		System.out.println("#"+bestCell_foodEaten+" WITH "+mostFoodEaten+" FOOD EATEN");
+		System.out.println("#"+bestCell_children+" WITH "+mostChildren+" CHILDREN");
+		System.out.println("#"+bestCell_oldest+" WITH "+longestLife+" STEP LIFETIME");
 		System.out.println();
 	}
 	
@@ -435,6 +490,7 @@ class ArtificialLife implements Runnable, KeyListener {
 				int choice = JOptionPane.showOptionDialog(null, "Load one cell or whole population?", "load", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[]{"one cell", "population"}, null); 
 				
 				if(choice == 0){
+					// User chose to load one cell. //
 					JFileChooser fileChooser = new JFileChooser();
 					fileChooser.setCurrentDirectory(new File("logs"));
 					fileChooser.showOpenDialog(null);
@@ -442,6 +498,7 @@ class ArtificialLife implements Runnable, KeyListener {
 					loadCellFromFile(file);
 					
 				} else if(choice == 1){
+					// User chose to load a population of cells. //
 					JFileChooser fileChooser = new JFileChooser();
 					fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 					fileChooser.setCurrentDirectory(new File("logs"));
