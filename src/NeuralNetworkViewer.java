@@ -35,7 +35,7 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 	static Color neuronColor_firing = Color.white;
 	static Color[] neuronColorList = neuronColorList(100);
 	
-	static Cell loadedCell = null;
+	static GraphCell loadedCell = null;
 	static LinkedList<NeuronVertex> neuronVertexList;
 	static NeuronVertex selectedVertex = null;
 	static int pointSize = 4;
@@ -166,6 +166,14 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 	}
 	
 	public void loadCell(Cell cell){
+		if(cell instanceof GraphCell) {
+			loadCell((GraphCell)cell);
+		} else {
+			System.err.println("NEURAL NETWORK VIEWER CURRENTLY ONLY WORKS FOR GRAPH-TYPE CELLS");
+		}
+	}
+	
+	public void loadCell(GraphCell cell){
 		loadedCell = cell;
 		neuronVertexList = new LinkedList<NeuronVertex>();
 		
@@ -201,7 +209,7 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 		if(file != null){
 			frame.setTitle(windowTitle+" - "+file.getPath());
 			LinkedList<String> lineList = TextFileHandler.readEntireFile(file.getPath());
-			loadCell(new Cell(lineList));
+			loadCell(new GraphCell(lineList));
 		}
 	}
 	

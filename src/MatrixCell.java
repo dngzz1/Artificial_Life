@@ -1,21 +1,18 @@
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.io.PrintWriter;
 import java.util.LinkedList;
 
 import files.TextFileHandler;
 
-class Cell2 extends WorldObject implements Stepable {
+class MatrixCell extends Cell {
+	static int rayCastLength = 10;
 	static Color[] validCellColors = validCellColors();
 	static int energyCostPerTick = 20;
 	static double mutationProbability = 0.05;
 	static double mutationProbability_col = 0.9;
 	static int mutationRate_col = 2;
-	
-	// Cell Metadata //
-	int generation = 0;
-	int children = 0;
-	int lifetimeFoodEaten = 0;
 	
 	// Cell Data //
 	int col;
@@ -23,10 +20,8 @@ class Cell2 extends WorldObject implements Stepable {
 	
 	// Cell Variables //
 	Direction facing = M.chooseRandom(Direction.values());
-	int energy = Cell.energyUponBirth;
-	int lifetime = 0;
 	boolean isDead = false;
-	Cell2 mate = null;
+	MatrixCell mate = null;
 	
 	// Neurons //
 	double[] sensoryNeurons = new double[14];
@@ -45,15 +40,15 @@ class Cell2 extends WorldObject implements Stepable {
 	double[][] conceptMemoryConnections = new double[memoryNeurons.length][conceptNeurons.length];
 	double[] memoryBias = new double[memoryNeurons.length];
 	
-	private static Cell2 createChild(Cell2 parent) {
-		Cell2 child = new Cell2(parent);
+	private static MatrixCell createChild(MatrixCell parent) {
+		MatrixCell child = new MatrixCell(parent);
 		child.generation = parent.generation + 1;
 		child.mutate();
 		return child;
 	}
 	
-	private static Cell2 createChild(Cell2 parent1, Cell2 parent2) {
-		Cell2 child = new Cell2(parent1, parent2);
+	private static MatrixCell createChild(MatrixCell parent1, MatrixCell parent2) {
+		MatrixCell child = new MatrixCell(parent1, parent2);
 		child.generation = Math.max(parent1.generation, parent2.generation) + 1;
 		child.mutate();
 		return child;
@@ -168,9 +163,10 @@ class Cell2 extends WorldObject implements Stepable {
 		return validCellColors;
 	}
 	
-	Cell2(){
+	MatrixCell(){
+		energy = GraphCell.energyUponBirth;
 		col = M.randInt(validCellColors.length);
-		energyPassedToChild = Cell.energyUponBirth;
+		energyPassedToChild = GraphCell.energyUponBirth;
 
 		boolean initialiseRandomly = true;
 		boolean initialiseWithMutations = true;
@@ -192,7 +188,7 @@ class Cell2 extends WorldObject implements Stepable {
 		}
 	}
 	
-	Cell2(Cell2 cell){
+	MatrixCell(MatrixCell cell){
 		col = cell.col;
 		energyPassedToChild = cell.energyPassedToChild;
 		sensoryConceptConnections = M.cloneMatrix(cell.sensoryConceptConnections);
@@ -204,7 +200,7 @@ class Cell2 extends WorldObject implements Stepable {
 		memoryBias = M.cloneVector(cell.memoryBias);
 	}
 	
-	Cell2(Cell2 parent1, Cell2 parent2){
+	MatrixCell(MatrixCell parent1, MatrixCell parent2){
 		col = M.roll(0) ? parent1.col : parent2.col;
 		energyPassedToChild = M.roll(0) ? parent1.energyPassedToChild : parent2.energyPassedToChild;
 		sensoryConceptConnections = M.mergeMatrices(parent1.sensoryConceptConnections, parent2.sensoryConceptConnections);
@@ -216,7 +212,7 @@ class Cell2 extends WorldObject implements Stepable {
 		memoryBias = M.mergeVectors(parent1.memoryBias, parent2.memoryBias);
 	}
 	
-	Cell2(LinkedList<String> lineList){
+	MatrixCell(LinkedList<String> lineList){
 		// Cell metadata //
 		lineList.remove();
 		generation = Integer.parseInt(lineList.remove());
@@ -279,8 +275,8 @@ class Cell2 extends WorldObject implements Stepable {
 	}
 	
 	@Override
-	protected Cell2 clone() {
-		return new Cell2(this);
+	protected MatrixCell clone() {
+		return new MatrixCell(this);
 	}
 	
 	private boolean displace() {
@@ -291,6 +287,19 @@ class Cell2 extends WorldObject implements Stepable {
 			return target.interact(this, Interaction.DISPLACE, null);
 		} else {
 			return false;
+		}
+	}
+	
+	void drawSenses(Graphics2D g){
+		Point[] eyeVectorList = new Point[3];
+		eyeVectorList[0] = facing.getVector();
+		eyeVectorList[1] = facing.rotateACW().getVector();
+		eyeVectorList[2] = facing.rotateCW().getVector();
+		for(Point eyeVector : eyeVectorList) {
+			int distance = rayCastLength;
+			int drawScale = Display.drawScale;
+			Point loc = getLocation();
+			g.drawLine(drawScale*loc.x, drawScale*loc.y, drawScale*(loc.x + distance*eyeVector.x), drawScale*(loc.y + distance*eyeVector.y));
 		}
 	}
 	
@@ -321,7 +330,7 @@ class Cell2 extends WorldObject implements Stepable {
 			return true;
 		case GIVE_ENERGY:
 			int amount = (Integer)data;
-			energy = Math.min(energy + amount, Cell.maxStoredEnergy);
+			energy = Math.min(energy + amount, GraphCell.maxStoredEnergy);
 			lifetimeFoodEaten += amount;
 			return true;
 		case KILL:
@@ -346,8 +355,8 @@ class Cell2 extends WorldObject implements Stepable {
 	private boolean mate() {
 		Point targetPoint = getAdjacentLocation(facing);
 		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
-		if(target != null && target instanceof Cell2){
-			((Cell2)target).mate = this;
+		if(target != null && target instanceof MatrixCell){
+			((MatrixCell)target).mate = this;
 			return true;
 		} else {
 			return false;
@@ -461,7 +470,6 @@ class Cell2 extends WorldObject implements Stepable {
 		WorldObject seenObject = null;
 		Point p = new Point(getLocation());
 		Point d = direction.getVector();
-		int rayCastLength = 10;
 		int distance;
 		for(distance = 0; distance < rayCastLength; distance ++){
 			p.x += d.x;
@@ -500,10 +508,10 @@ class Cell2 extends WorldObject implements Stepable {
 	}
 	
 	private boolean spawn(Direction direction, int energyPassedToChild){
-		int energyCost = Cell.birthEnergyRequirement + energyPassedToChild;
+		int energyCost = GraphCell.birthEnergyRequirement + energyPassedToChild;
 		if(energy > energyCost){
 			Point p = M.add(direction.getVector(), location);
-			Cell2 child = (mate == null) ? createChild(this) : createChild(this, mate);
+			MatrixCell child = (mate == null) ? createChild(this) : createChild(this, mate);
 			boolean placedSuccessfully = ArtificialLife.place(child, p);
 			if(placedSuccessfully){
 				energy -= energyCost;

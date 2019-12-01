@@ -7,7 +7,7 @@ abstract class Organ {
 	private static LinkedList<String> organTypeLabelList = new LinkedList<String>();
 	private static LinkedList<Organ> mutatableOrganTypeList = new LinkedList<Organ>();
 	
-	Cell owner;
+	GraphCell owner;
 	float mutationChance = M.randf(1.0f);
 	
 	static Organ load(String[] data){
@@ -39,7 +39,7 @@ abstract class Organ {
 		registerOrganType(new Organ_Hunger(), "Hunger");
 		registerOrganType(new Organ_Location(), "Location");
 		registerOrganType(new Organ_Interaction(), "Movement");
-		registerOrganType(new Organ_Reproduction(Cell.birthEnergyRequirement), "Reproduction");
+		registerOrganType(new Organ_Reproduction(GraphCell.birthEnergyRequirement), "Reproduction");
 	}
 	
 	@Override

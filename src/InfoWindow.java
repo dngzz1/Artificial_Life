@@ -2,37 +2,39 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import general.Util;
+
 class InfoWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
 	Cell followedCell = null;
 	
 	private JLabel infoLabel = new JLabel();
-	private JLabel organInfoLabel = new JLabel();
+	private JLabel cellInfoLabel = new JLabel();
 	
 	InfoWindow(){
 		setTitle("Info Window");
 		setSize(800, 400);
 		setLayout(new GridLayout(1, 0));
 		add(infoLabel);
-		add(organInfoLabel);
+		add(cellInfoLabel);
 	}
 	
 	public Cell getFollowedCell(){
 		return followedCell;
 	}
 	
-	private int getLatestGeneration(){
+	public int getLatestGeneration(){
 		int latestGeneration = 0;
-		for(Stepable stepable : ArtificialLife.stepList){
-			if(stepable instanceof Cell){
-				Cell cell = (Cell)stepable;
+		for(Stepable stepable : Util.cloneList(ArtificialLife.stepList)){
+			if(stepable instanceof GraphCell){
+				GraphCell cell = (GraphCell)stepable;
 				if(cell.generation > latestGeneration){
 					latestGeneration = cell.generation;
 				}
 			}
-			if(stepable instanceof Cell2){
-				Cell2 cell = (Cell2)stepable;
+			if(stepable instanceof MatrixCell){
+				MatrixCell cell = (MatrixCell)stepable;
 				if(cell.generation > latestGeneration){
 					latestGeneration = cell.generation;
 				}
@@ -41,17 +43,17 @@ class InfoWindow extends JFrame {
 		return latestGeneration;
 	}
 	
-	private int getOldestGeneration(){
+	public int getOldestGeneration(){
 		int oldestGeneration = Integer.MAX_VALUE;
-		for(Stepable stepable : ArtificialLife.stepList){
-			if(stepable instanceof Cell){
-				Cell cell = (Cell)stepable;
+		for(Stepable stepable : Util.cloneList(ArtificialLife.stepList)){
+			if(stepable instanceof GraphCell){
+				GraphCell cell = (GraphCell)stepable;
 				if(cell.generation < oldestGeneration){
 					oldestGeneration = cell.generation;
 				}
 			}
-			if(stepable instanceof Cell2){
-				Cell2 cell = (Cell2)stepable;
+			if(stepable instanceof MatrixCell){
+				MatrixCell cell = (MatrixCell)stepable;
 				if(cell.generation < oldestGeneration){
 					oldestGeneration = cell.generation;
 				}
@@ -60,17 +62,17 @@ class InfoWindow extends JFrame {
 		return oldestGeneration;
 	}
 	
-	private int getGenerationCount(int generation){
+	public int getGenerationCount(int generation){
 		int cellCount = 0;
-		for(Stepable stepable : ArtificialLife.stepList){
-			if(stepable instanceof Cell){
-				Cell cell = (Cell)stepable;
+		for(Stepable stepable : Util.cloneList(ArtificialLife.stepList)){
+			if(stepable instanceof GraphCell){
+				GraphCell cell = (GraphCell)stepable;
 				if(cell.generation == generation){
 					cellCount ++;
 				}
 			}
-			if(stepable instanceof Cell2){
-				Cell2 cell = (Cell2)stepable;
+			if(stepable instanceof MatrixCell){
+				MatrixCell cell = (MatrixCell)stepable;
 				if(cell.generation == generation){
 					cellCount ++;
 				}
@@ -104,14 +106,27 @@ class InfoWindow extends JFrame {
 			infoText += "lifetime = "+followedCell.lifetime+"<br>";
 			infoText += "food eaten = "+followedCell.lifetimeFoodEaten+"<br>"; 
 			infoText += "number of childern = "+followedCell.children+"<br>"; 
-			infoText += "organs = "+followedCell.organList.size()+"<br>";
 			
-			String organInfoText = "<html>";
-			for(Organ organ : followedCell.organList){
-				organInfoText = organInfoText+organ+"<br>";
+			if(followedCell instanceof GraphCell) {
+				GraphCell cell = (GraphCell)followedCell;
+				infoText += "organs = "+cell.organList.size()+"<br>";
+				
+				String organInfoText = "<html>";
+				for(Organ organ : cell.organList){
+					organInfoText = organInfoText+organ+"<br>";
+				}
+				organInfoText = organInfoText+"</html>";
+				cellInfoLabel.setText(organInfoText);
 			}
-			organInfoText = organInfoText+"</html>";
-			organInfoLabel.setText(organInfoText);
+			if(followedCell instanceof MatrixCell) {
+				MatrixCell cell = (MatrixCell)followedCell;
+				String memoryInfoText = "<html>";
+				for(int i = 0; i < cell.memoryNeurons.length; i ++) {
+					memoryInfoText = memoryInfoText+"memoryNeurons["+i+"] = "+cell.memoryNeurons[i]+"<br>";
+				}
+				memoryInfoText = memoryInfoText+"</html>";
+				cellInfoLabel.setText(memoryInfoText);
+			}
 		}
 		
 		infoText += "</html>";

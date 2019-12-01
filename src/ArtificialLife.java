@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.Date;
 import java.util.LinkedList;
 
@@ -19,7 +20,7 @@ import maths.M;
 class ArtificialLife implements Runnable, KeyListener {
 	private static Display display;
 	private static InfoWindow infoWindow;
-	static NeuralNetworkViewer neuralNetworkViewer = new NeuralNetworkViewer();
+	static NeuralNetworkViewer neuralNetworkViewer;
 	
 	static int fpsCap;
 	static int width, height;
@@ -28,29 +29,88 @@ class ArtificialLife implements Runnable, KeyListener {
 	static WorldObject [][] grid = new WorldObject[width][height];
 	static LinkedList<Stepable> stepList = new LinkedList<Stepable>();
 	
-	static int stepCounter = 0;
-	static boolean isRunning = true;
+	static boolean isRunning;
+	static int stepCounter;
+	static int totalChildren = 0;
+	
+	// Controls //
+	static boolean isAcceleratedModeOn = false;
+	static boolean isDisplayOn = true;
 	static boolean loadFile = false;
 	static boolean printLog = false;
 	static boolean step = false;
-	static boolean isAcceleratedModeOn = false;
-	static boolean isDisplayOn = true;
 	static boolean spawnNewCells = true;
-	
-	static int totalChildren = 0;
-	
 	
 	// XXX //
 	static boolean useNewCellDefinitions = true;
 	// XXX //
 	
+	// Auto-test variables //
+	static boolean isAutotesting = false;
+	static int simulationNumber;
+	static String autoTestLogFilename;
+	static int numberOfSimulations;
+	static int simulationLength;
+	
+	private static void autoTest_start() {
+		System.out.println("AUTOTESTING");
+		System.out.println();
+		
+		// Get parameters from user. //
+		String numberOfSimulationsInput = JOptionPane.showInputDialog("Number of simulations:");
+		numberOfSimulations = Integer.parseInt(numberOfSimulationsInput);
+		String simulationLengthInput = JOptionPane.showInputDialog("Simulation length (steps):");
+		simulationLength = Integer.parseInt(simulationLengthInput);
+		
+		// Start printing log file. //
+		autoTestLogFilename = "logs/autoTestLog_"+new Date().getTime()+".txt";
+		PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename);
+		pw.println("AUTO-RUNNING "+numberOfSimulations+" SIMULATIONS FOR "+simulationLength+" STEPS EACH");
+		pw.println();
+		pw.println("sim = simulation number");
+		pw.println("gen = latest generation");
+		pw.println("#ch = total number of children");
+		pw.println();
+		pw.println("sim:gen:#ch");
+		pw.close();
+		
+		// Begin simulation //
+		isAutotesting = true;
+		simulationNumber = 1;
+		isAcceleratedModeOn = true;
+		isDisplayOn = false;
+		new ArtificialLife().start();
+	}
+	
+	private void autoTest_step() {
+		// If the simulation has reached the termination condition, we log the results and restart. //
+		if(stepCounter >= simulationLength) {
+			// Print the log of this simulation to file. //
+			System.out.println("SIMULATION #"+simulationNumber+" COMPLETE");
+			int generation = infoWindow.getGenerationCount(infoWindow.getLatestGeneration());
+			PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename, true);
+			pw.println(simulationNumber+":"+generation+":"+ArtificialLife.totalChildren);
+			pw.close();
+			printGenerationToFile();
+			
+			simulationNumber ++;
+			if(simulationNumber <= numberOfSimulations) {
+				// Reset for the next simulation . //
+				ArtificialLife.removeAllCells();
+				ArtificialLife.setup();
+				stepCounter = 0;
+			} else {
+				// End auto-test. //
+				isRunning = false;
+				System.exit(0);
+			}
+		}
+	}
+	
 	public static int getCellCount(){
 		int cellCount = 0;
-		for(Stepable stepable : stepList){
+		for(Stepable stepable : Util.cloneList(stepList)){
 			if(stepable instanceof Cell){
-				cellCount ++;
-			}
-			if(stepable instanceof Cell2){
 				cellCount ++;
 			}
 		}
@@ -59,27 +119,8 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static int getCellIndex(Cell cell){
 		int index = 0;
-		for(Stepable stepable : stepList){
+		for(Stepable stepable : Util.cloneList(stepList)){
 			if(stepable instanceof Cell){
-				if(stepable == cell){
-					return index;
-				}
-				index ++;
-			}
-			if(stepable instanceof Cell2){
-				index ++;
-			}
-		}
-		return -1;
-	}
-	
-	public static int getCellIndex(Cell2 cell){
-		int index = 0;
-		for(Stepable stepable : stepList){
-			if(stepable instanceof Cell){
-				index ++;
-			}
-			if(stepable instanceof Cell2){
 				if(stepable == cell){
 					return index;
 				}
@@ -90,7 +131,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	}
 	
 	public static Cell getFirstCell() {
-		for(Stepable stepable : stepList){
+		for(Stepable stepable : Util.cloneList(stepList)){
 			if(stepable instanceof Cell){
 				return (Cell)stepable;
 			}
@@ -104,7 +145,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static Cell getLastCell(){
 		Cell lastCell = null;
-		for(Stepable stepable : stepList){
+		for(Stepable stepable : Util.cloneList(stepList)){
 			if(stepable instanceof Cell){
 				lastCell = (Cell)stepable;
 			}
@@ -114,7 +155,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static Cell getNextCell(Cell cell) {
 		boolean returnNext = false;
-		for(Stepable stepable : stepList){
+		for(Stepable stepable : Util.cloneList(stepList)){
 			if(returnNext && stepable instanceof Cell){
 				return (Cell)stepable;
 			} else if(stepable == cell){
@@ -126,7 +167,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static Cell getPreviousCell(Cell cell) {
 		Cell previousCell = null;
-		for(Stepable stepable : stepList){
+		for(Stepable stepable : Util.cloneList(stepList)){
 			if(stepable instanceof Cell){
 				if(stepable == cell){
 					return previousCell;
@@ -138,20 +179,50 @@ class ArtificialLife implements Runnable, KeyListener {
 		return null;
 	}
 	
+	private static void loadFile() {
+		int choice = JOptionPane.showOptionDialog(null, "Load one cell or whole population?", "load", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[]{"one cell", "population"}, null); 
+		
+		if(choice == 0){
+			// User chose to load one cell. //
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setCurrentDirectory(new File("logs"));
+			fileChooser.showOpenDialog(null);
+			File file = fileChooser.getSelectedFile();
+			loadCellFromFile(file);
+			
+		} else if(choice == 1){
+			// User chose to load a population of cells. //
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			fileChooser.setCurrentDirectory(new File("logs"));
+			fileChooser.showOpenDialog(null);
+			File folder = fileChooser.getSelectedFile();
+			
+			String path = folder.getPath();
+			
+			int i = 0;
+			File file;
+			while(true){
+				file = new File(path+File.separator+"cell"+i+".txt");
+				if(file.canRead()){
+					loadCellFromFile(file);
+					i ++;
+				} else break;
+			} 
+			
+		}
+	}
+	
 	public static void loadCellFromFile(File file){
 		if(file != null){
-			// Erase the current world. //
-			stepList.clear();
-			grid = new WorldObject[width][height];
-			
 			// Load and place the cell. //
 			LinkedList<String> lineList = TextFileHandler.readEntireFile(file.getPath());
 			String cellType = lineList.remove();
 			WorldObject loadedCell = null;
 			if(cellType.startsWith("Cell #")) {
-				loadedCell = new Cell(lineList);
+				loadedCell = new GraphCell(lineList);
 			} else if(cellType.startsWith("Cell2 #")) {
-				loadedCell = new Cell2(lineList);
+				loadedCell = new MatrixCell(lineList);
 			}
 			if(loadedCell != null) {
 				Point p = loadedCell.getLocation();
@@ -164,19 +235,27 @@ class ArtificialLife implements Runnable, KeyListener {
 			} else {
 				System.out.println("ERROR LOADING CELL FROM FILE: "+file.getPath());
 			}
-			
-			// Set up the new world. //
-			setup();
-			stepCounter = 0;
-			minCellCount = 1;
 		}
 	}
 	
 	public static void main(String[] args) {
+		// Ask if we want to run auto-testing. //
+		int choice = JOptionPane.showConfirmDialog(null, "Run Auto-testing?", "", JOptionPane.YES_NO_OPTION);
+		boolean doAutotest = (choice == 0);
+		if(choice == -1) {
+			System.exit(0);
+			return;
+		}
+		
 		Organ.setup();
 		ArtificialLife.setup();
-		ArtificialLife program = new ArtificialLife();
-		new Thread(program).start();
+		
+		// Auto-testing //
+		if(doAutotest) {
+			autoTest_start();
+		} else {
+			new ArtificialLife().start();
+		}
 	}
 	
 	public static boolean place(WorldObject object, int x, int y){
@@ -213,9 +292,9 @@ class ArtificialLife implements Runnable, KeyListener {
 		int longestLife = 0;
 		int bestCell_oldest = 0;
 		int i = 0;
-		for(Stepable stepable : stepList){
-			if(stepable instanceof Cell){
-				Cell cell = (Cell)stepable;
+		for(Stepable stepable : Util.cloneList(stepList)){
+			if(stepable instanceof GraphCell){
+				GraphCell cell = (GraphCell)stepable;
 				cell.printToFile(filename+"/cell"+i+".txt");
 				if(cell.lifetimeFoodEaten > mostFoodEaten){
 					bestCell_foodEaten = i;
@@ -231,8 +310,8 @@ class ArtificialLife implements Runnable, KeyListener {
 				}
 				i ++;
 			}
-			if(stepable instanceof Cell2){
-				Cell2 cell = (Cell2)stepable;
+			if(stepable instanceof MatrixCell){
+				MatrixCell cell = (MatrixCell)stepable;
 				cell.printToFile(filename+"/cell"+i+".txt");
 				if(cell.lifetimeFoodEaten > mostFoodEaten){
 					bestCell_foodEaten = i;
@@ -255,6 +334,18 @@ class ArtificialLife implements Runnable, KeyListener {
 		System.out.println("#"+bestCell_children+" WITH "+mostChildren+" CHILDREN");
 		System.out.println("#"+bestCell_oldest+" WITH "+longestLife+" STEP LIFETIME");
 		System.out.println();
+	}
+	
+	public static void removeAllCells() {
+		for(Stepable stepable : Util.cloneList(stepList)) {
+			if(stepable instanceof GraphCell) {
+				((GraphCell)stepable).kill();
+			}
+			if(stepable instanceof MatrixCell) {
+				((MatrixCell)stepable).kill();
+			}
+		}
+		stepList.clear();
 	}
 	
 	public static void selectNextCell() {
@@ -305,28 +396,28 @@ class ArtificialLife implements Runnable, KeyListener {
 					Display.drawScale = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("initialMutations=")){
-					Cell.initialMutations = Integer.parseInt(line.substring(dataIndex));
+					GraphCell.initialMutations = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("maxMutations=")){
-					Cell.maxMutations = Integer.parseInt(line.substring(dataIndex));
+					GraphCell.maxMutations = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("energyGainPerFood=")){
 					Food.energyGainPerFood = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("maxStoredEnergy=")){
-					Cell.maxStoredEnergy = Integer.parseInt(line.substring(dataIndex));
+					GraphCell.maxStoredEnergy = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("birthEnergyRequirement=")){
-					Cell.birthEnergyRequirement = Integer.parseInt(line.substring(dataIndex));
+					GraphCell.birthEnergyRequirement = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("energyUponBirth=")){
-					Cell.energyUponBirth = Integer.parseInt(line.substring(dataIndex));
+					GraphCell.energyUponBirth = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("energyCostPerTick=")){
-					Cell.energyCostPerTick = Integer.parseInt(line.substring(dataIndex));
+					GraphCell.energyCostPerTick = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("energyCostPerNeuron=")){
-					Cell.energyCostPerNeuron = Integer.parseInt(line.substring(dataIndex));
+					GraphCell.energyCostPerNeuron = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("energyCostToRotate=")){
 					Organ_Interaction.energyCostToRotate = Integer.parseInt(line.substring(dataIndex));
@@ -338,31 +429,31 @@ class ArtificialLife implements Runnable, KeyListener {
 					Organ_Eye.energyCostPerTileSeen = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_addConnection=")){
-					Cell.mutationChance_addConnection = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_addConnection = Float.parseFloat(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_addNeuron=")){
-					Cell.mutationChance_addNeuron = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_addNeuron = Float.parseFloat(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_changeNeuronThreshold=")){
-					Cell.mutationChance_changeNeuronThreshold = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_changeNeuronThreshold = Float.parseFloat(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_changeFiringStrength=")){
-					Cell.mutationChance_changeFiringStrength = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_changeFiringStrength = Float.parseFloat(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_collapseConection=")){
-					Cell.mutationChance_collapseConection = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_collapseConection = Float.parseFloat(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_removeConnection=")){
-					Cell.mutationChance_removeConnection = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_removeConnection = Float.parseFloat(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_splitConnection=")){
-					Cell.mutationChance_splitConnection = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_splitConnection = Float.parseFloat(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_addOrgan=")){
-					Cell.mutationChance_addOrgan = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_addOrgan = Float.parseFloat(line.substring(dataIndex));
 				}
 				if(line.startsWith("mutationChance_removeOrgan=")){
-					Cell.mutationChance_removeOrgan = Float.parseFloat(line.substring(dataIndex));
+					GraphCell.mutationChance_removeOrgan = Float.parseFloat(line.substring(dataIndex));
 				}
 			}
 		}
@@ -397,9 +488,9 @@ class ArtificialLife implements Runnable, KeyListener {
 		// Spawn new cells if the population is too low. //
 		if(spawnNewCells && getCellCount() < minCellCount){
 			if(useNewCellDefinitions) {
-				placeRandomly(new Cell2());
+				placeRandomly(new MatrixCell());
 			} else {
-				placeRandomly(new Cell());
+				placeRandomly(new GraphCell());
 			}
 		}
 		
@@ -413,6 +504,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	}
 	
 	private ArtificialLife(){
+		neuralNetworkViewer = new NeuralNetworkViewer();
 		display = new Display();
 		display.addKeyListener(this);
 		display.setVisible(true);
@@ -487,38 +579,7 @@ class ArtificialLife implements Runnable, KeyListener {
 				display.draw();
 			}
 			if(loadFile){
-				int choice = JOptionPane.showOptionDialog(null, "Load one cell or whole population?", "load", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[]{"one cell", "population"}, null); 
-				
-				if(choice == 0){
-					// User chose to load one cell. //
-					JFileChooser fileChooser = new JFileChooser();
-					fileChooser.setCurrentDirectory(new File("logs"));
-					fileChooser.showOpenDialog(null);
-					File file = fileChooser.getSelectedFile();
-					loadCellFromFile(file);
-					
-				} else if(choice == 1){
-					// User chose to load a population of cells. //
-					JFileChooser fileChooser = new JFileChooser();
-					fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-					fileChooser.setCurrentDirectory(new File("logs"));
-					fileChooser.showOpenDialog(null);
-					File folder = fileChooser.getSelectedFile();
-					
-					String path = folder.getPath();
-					
-					int i = 0;
-					File file;
-					while(true){
-						file = new File(path+File.separator+"cell"+i+".txt");
-						if(file.canRead()){
-							loadCellFromFile(file);
-							i ++;
-						} else break;
-					} 
-					
-				}
-				
+				loadFile();
 				loadFile = false;
 			}
 			if(printLog){
@@ -532,6 +593,15 @@ class ArtificialLife implements Runnable, KeyListener {
 					e.printStackTrace();
 				}
 			}
+			if(isAutotesting) {
+				autoTest_step();
+			}
 		}
+	}
+	
+	public void start() {
+		stepCounter = 0;
+		isRunning = true;
+		new Thread(this).start();
 	}
 }

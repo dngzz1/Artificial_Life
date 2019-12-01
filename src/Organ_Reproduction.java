@@ -51,7 +51,7 @@ class Organ_Reproduction extends Organ {
 
 	@Override
 	Organ loadNew() {
-		int energyPassedToChild = Cell.energyUponBirth;
+		int energyPassedToChild = GraphCell.energyUponBirth;
 		return new Organ_Reproduction(energyPassedToChild);
 	}
 
