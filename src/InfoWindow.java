@@ -2,8 +2,6 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import general.Util;
-
 class InfoWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
@@ -26,7 +24,7 @@ class InfoWindow extends JFrame {
 	
 	public int getLatestGeneration(){
 		int latestGeneration = 0;
-		for(Stepable stepable : Util.cloneList(ArtificialLife.stepList)){
+		for(Stepable stepable : ArtificialLife.getStepList()){
 			if(stepable instanceof GraphCell){
 				GraphCell cell = (GraphCell)stepable;
 				if(cell.generation > latestGeneration){
@@ -45,7 +43,7 @@ class InfoWindow extends JFrame {
 	
 	public int getOldestGeneration(){
 		int oldestGeneration = Integer.MAX_VALUE;
-		for(Stepable stepable : Util.cloneList(ArtificialLife.stepList)){
+		for(Stepable stepable : ArtificialLife.getStepList()){
 			if(stepable instanceof GraphCell){
 				GraphCell cell = (GraphCell)stepable;
 				if(cell.generation < oldestGeneration){
@@ -64,7 +62,7 @@ class InfoWindow extends JFrame {
 	
 	public int getGenerationCount(int generation){
 		int cellCount = 0;
-		for(Stepable stepable : Util.cloneList(ArtificialLife.stepList)){
+		for(Stepable stepable : ArtificialLife.getStepList()){
 			if(stepable instanceof GraphCell){
 				GraphCell cell = (GraphCell)stepable;
 				if(cell.generation == generation){

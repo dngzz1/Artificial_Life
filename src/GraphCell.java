@@ -26,7 +26,6 @@ class GraphCell extends Cell {
 	static float mutationChance_removeOrgan;
 	
 	// Cell variables - remember to update the printToFile(String filename) and Cell(File file) methods when changing these! //
-	Direction facing = M.chooseRandom(Direction.values());
 	Color color;
 	float birthChance;
 	float mutationChance;
@@ -206,6 +205,7 @@ class GraphCell extends Cell {
 		}
 	}
 	
+	@Override
 	public Color getColor() {
 		return color;
 	}
@@ -253,8 +253,7 @@ class GraphCell extends Cell {
 	}
 	
 	void kill(){
-		ArtificialLife.stepList.remove(this);
-		ArtificialLife.grid[location.x][location.y] = null;
+		ArtificialLife.remove(this);
 	}
 	
 	private Color loadColorData(String data){

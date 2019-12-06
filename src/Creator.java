@@ -7,6 +7,12 @@ class Creator extends WorldObject implements Stepable {
 	public Color getColor() {
 		return color;
 	}
+	
+	@Override
+	public int getStepsToNextTurn() {
+		return 1;
+	}
+	
 	@Override
 	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {

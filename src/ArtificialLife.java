@@ -13,7 +13,6 @@ import javax.swing.JOptionPane;
 
 import files.ImageHandler;
 import files.TextFileHandler;
-import general.Util;
 
 import maths.M;
 
@@ -27,7 +26,8 @@ class ArtificialLife implements Runnable, KeyListener {
 	static int minCellCount;
 	
 	static WorldObject [][] grid = new WorldObject[width][height];
-	static LinkedList<Stepable> stepList = new LinkedList<Stepable>();
+	
+	static TurnList turnList = new TurnList();
 	
 	static boolean isRunning;
 	static int stepCounter;
@@ -96,7 +96,7 @@ class ArtificialLife implements Runnable, KeyListener {
 			simulationNumber ++;
 			if(simulationNumber <= numberOfSimulations) {
 				// Reset for the next simulation . //
-				ArtificialLife.removeAllCells();
+				turnList.clear();
 				ArtificialLife.setup();
 				stepCounter = 0;
 			} else {
@@ -109,7 +109,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static int getCellCount(){
 		int cellCount = 0;
-		for(Stepable stepable : Util.cloneList(stepList)){
+		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
 				cellCount ++;
 			}
@@ -119,7 +119,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static int getCellIndex(Cell cell){
 		int index = 0;
-		for(Stepable stepable : Util.cloneList(stepList)){
+		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
 				if(stepable == cell){
 					return index;
@@ -131,7 +131,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	}
 	
 	public static Cell getFirstCell() {
-		for(Stepable stepable : Util.cloneList(stepList)){
+		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
 				return (Cell)stepable;
 			}
@@ -145,7 +145,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static Cell getLastCell(){
 		Cell lastCell = null;
-		for(Stepable stepable : Util.cloneList(stepList)){
+		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
 				lastCell = (Cell)stepable;
 			}
@@ -155,7 +155,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static Cell getNextCell(Cell cell) {
 		boolean returnNext = false;
-		for(Stepable stepable : Util.cloneList(stepList)){
+		for(Stepable stepable : getStepList()){
 			if(returnNext && stepable instanceof Cell){
 				return (Cell)stepable;
 			} else if(stepable == cell){
@@ -167,7 +167,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static Cell getPreviousCell(Cell cell) {
 		Cell previousCell = null;
-		for(Stepable stepable : Util.cloneList(stepList)){
+		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
 				if(stepable == cell){
 					return previousCell;
@@ -177,6 +177,10 @@ class ArtificialLife implements Runnable, KeyListener {
 			}
 		}
 		return null;
+	}
+	
+	public static LinkedList<Stepable> getStepList(){
+		return turnList.getStepList();
 	}
 	
 	private static void loadFile() {
@@ -268,7 +272,7 @@ class ArtificialLife implements Runnable, KeyListener {
 			object.setLocation(location);
 			grid[location.x][location.y] = object;
 			if(object instanceof Stepable){
-				stepList.add((Stepable)object);
+				turnList.add((Stepable)object, 1);
 			}
 			return true;
 		} else return false;
@@ -292,7 +296,7 @@ class ArtificialLife implements Runnable, KeyListener {
 		int longestLife = 0;
 		int bestCell_oldest = 0;
 		int i = 0;
-		for(Stepable stepable : Util.cloneList(stepList)){
+		for(Stepable stepable : getStepList()){
 			if(stepable instanceof GraphCell){
 				GraphCell cell = (GraphCell)stepable;
 				cell.printToFile(filename+"/cell"+i+".txt");
@@ -336,21 +340,16 @@ class ArtificialLife implements Runnable, KeyListener {
 		System.out.println();
 	}
 	
-	public static void removeAllCells() {
-		for(Stepable stepable : Util.cloneList(stepList)) {
-			if(stepable instanceof GraphCell) {
-				((GraphCell)stepable).kill();
-			}
-			if(stepable instanceof MatrixCell) {
-				((MatrixCell)stepable).kill();
-			}
+	public static void remove(WorldObject object) {
+		if(object instanceof Stepable) {
+			turnList.remove((Stepable)object);
 		}
-		stepList.clear();
+		ArtificialLife.grid[object.location.x][object.location.y] = null;
 	}
 	
 	public static void selectNextCell() {
 		Cell selectedCell = infoWindow.getFollowedCell();
-		if(selectedCell == null || !stepList.contains(selectedCell)){
+		if(selectedCell == null || !turnList.contains(selectedCell)){
 			infoWindow.setFollowedCell(getFirstCell());
 			infoWindow.update();
 		} else {
@@ -364,7 +363,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static void selectPrevoiusCell(){
 		Cell selectedCell = infoWindow.getFollowedCell();
-		if(selectedCell == null || !stepList.contains(selectedCell)){
+		if(selectedCell == null || !turnList.contains(selectedCell)){
 			infoWindow.setFollowedCell(getLastCell());
 			infoWindow.update();
 		} else {
@@ -481,9 +480,12 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public static void step(){
 		// Step the things that need to. //
-		for(Stepable stepable : Util.cloneList(stepList)){
-			stepable.step();
-		}
+		turnList.step();
+		
+		
+//		for(Stepable stepable : getStepList()){
+//			stepable.step();
+//		}
 		
 		// Spawn new cells if the population is too low. //
 		if(spawnNewCells && getCellCount() < minCellCount){

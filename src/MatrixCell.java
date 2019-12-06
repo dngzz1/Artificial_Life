@@ -19,8 +19,6 @@ class MatrixCell extends Cell {
 	int energyPassedToChild;
 	
 	// Cell Variables //
-	Direction facing = M.chooseRandom(Direction.values());
-	boolean isDead = false;
 	MatrixCell mate = null;
 	
 	// Neurons //
@@ -348,8 +346,7 @@ class MatrixCell extends Cell {
 	
 	void kill(){
 		isDead = true;
-		ArtificialLife.stepList.remove(this);
-		ArtificialLife.grid[location.x][location.y] = null;
+		ArtificialLife.remove(this);
 	}
 	
 	private boolean mate() {
