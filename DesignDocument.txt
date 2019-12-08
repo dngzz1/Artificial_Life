@@ -3,7 +3,6 @@ DESIGN DOCUMENT: Artificial Life
 
 ~~ TO-DO ~~
 
-> Size and speed for cells, along with appropriate changes to energy cost per turn.
 > Test different setups for matrix-type cells: number of memory/concept neurons, number of concept neuron layers, mutation rates.
 > Improved saving/loading. Separate handling the map and the cells. More options.
 > More varied food sources for cells. Different types of food sources, in order to encourage multiple non-competing species.

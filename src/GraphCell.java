@@ -144,6 +144,8 @@ class GraphCell extends Cell {
 	}
 	
 	GraphCell(GraphCell cell){
+		super(cell);
+		
 		// Clone the cell's physical characteristics (color). //
 		generation = cell.generation;
 		color = cell.color;

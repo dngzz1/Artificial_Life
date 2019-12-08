@@ -8,11 +8,8 @@ import files.TextFileHandler;
 
 class MatrixCell extends Cell {
 	static int rayCastLength = 10;
-	static Color[] validCellColors = validCellColors();
-	static int energyCostPerTick = 20;
 	static double mutationProbability = 0.05;
 	static double mutationProbability_col = 0.9;
-	static int mutationRate_col = 2;
 	
 	// Cell Data //
 	int col;
@@ -52,115 +49,6 @@ class MatrixCell extends Cell {
 		return child;
 	}
 	
-	private static double[][] loadMatrix(LinkedList<String> dataLineList, int rows) {
-		double[][] matrix = new double[rows][];
-		for(int row = 0; row < matrix.length; row ++) {
-			matrix[row] = loadVector(dataLineList.remove());
-		}
-		return matrix;
-	}
-	
-	private static double[] loadVector(String dataString) {
-		String[] data = dataString.split(";");
-		double[] vector = new double[data.length];
-		for(int i = 0; i < vector.length; i ++) {
-			vector[i] = Double.parseDouble(data[i]);
-		}
-		return vector;
-	}
-	
-	private static int mutate(int value, double probability) {
-		if(M.roll(probability)) {
-			double multiplier;
-			if(M.roll(0.5)) {
-				// 50% chance to increase between x1 to x2. //
-				multiplier = M.rand(1, 2);
-			} else {
-				// 50% chance to decrease between x0.5 to x1. //
-				multiplier = M.rand(0.5, 1);
-			}
-			return (int)(value*multiplier);
-		} else {
-			return value;
-		}
-	}
-	
-	private static double mutate(double value) {
-//		return M.rand(-1, 1);
-		return M.rand(1)*M.rand(1)*M.rand(1) - M.rand(1)*M.rand(1)*M.rand(1);
-	}
-	
-	private static double mutate(double value, double probability) {
-		return M.roll(probability) ? mutate(value) : value;
-	}
-	
-	private static void mutate(double[] vector, double probability) {
-		for(int i = 0; i < vector.length; i ++) {
-			vector[i] = mutate(vector[i], probability);
-		}
-	}
-	
-	private static void mutate(double[][] matrix, double probability) {
-		for(int i = 0; i < matrix.length; i ++) {
-			for(int j = 0; j < matrix[i].length; j ++) {
-				matrix[i][j] = mutate(matrix[i][j], probability);
-			}
-		}
-	}
-	
-	private static int mutateCol(int col) {
-		if(M.roll(mutationProbability_col)) {
-			int delta = M.randInt(mutationRate_col) - M.randInt(mutationRate_col);
-			col = (col + validCellColors.length + delta)%validCellColors.length;
-		}
-		return col;
-	}
-	
-	private static void printMatrix(PrintWriter pw, double[][] matrix) {
-		for(int row = 0; row < matrix.length; row ++) {
-			printVector(pw, matrix[row]);
-		}
-	}
-	
-	private static void printVector(PrintWriter pw, double[] vector) {
-		for(int i = 0; i < vector.length; i ++) {
-			pw.print(vector[i]+";");
-		}
-		pw.println();
-	}
-	
-	private static final Color[] validCellColors() {
-		if(validCellColors == null) {
-			int n = 8;
-			validCellColors = new Color[6*n];
-			for(int i = 0; i < n; i ++) {
-				int g = i*255/n;
-				validCellColors[i] = new Color(255, g, 0);
-			}
-			for(int i = 0; i < n; i ++) {
-				int r = 255 - i*255/n;
-				validCellColors[n + i] = new Color(r, 255, 0);
-			}
-			for(int i = 0; i < n; i ++) {
-				int b = i*255/n;
-				validCellColors[2*n + i] = new Color(0, 255, b);
-			}
-			for(int i = 0; i < n; i ++) {
-				int g = 255 - i*255/n;
-				validCellColors[3*n + i] = new Color(0, g, 255);
-			}
-			for(int i = 0; i < n; i ++) {
-				int r = i*255/n;
-				validCellColors[4*n + i] = new Color(r, 0, 255);
-			}
-			for(int i = 0; i < n; i ++) {
-				int b = 255 - i*255/n;
-				validCellColors[5*n + i] = new Color(255, 0, b);
-			}
-		}
-		return validCellColors;
-	}
-	
 	MatrixCell(){
 		energy = GraphCell.energyUponBirth;
 		col = M.randInt(validCellColors.length);
@@ -181,25 +69,28 @@ class MatrixCell extends Cell {
 		}
 		
 		if(initialiseWithMutations) {
-			for(int i = 0; i < 10; i ++)
-				mutate();
+//			for(int i = 0; i < 10; i ++)
+//				mutate();
 		}
+		mutate();
 	}
 	
-	MatrixCell(MatrixCell cell){
-		col = cell.col;
-		energyPassedToChild = cell.energyPassedToChild;
-		sensoryConceptConnections = M.cloneMatrix(cell.sensoryConceptConnections);
-		memoryConceptConnections = M.cloneMatrix(cell.memoryConceptConnections);
-		conceptBias = M.cloneVector(cell.conceptBias);
-		conceptMotorConnections = M.cloneMatrix(cell.conceptMotorConnections);
-		motorBias = M.cloneVector(cell.motorBias);
-		conceptMemoryConnections = M.cloneMatrix(cell.conceptMemoryConnections);
-		memoryBias = M.cloneVector(cell.memoryBias);
+	MatrixCell(MatrixCell parent){
+		super(parent);
+		col = parent.col;
+		energyPassedToChild = parent.energyPassedToChild;
+		sensoryConceptConnections = M.cloneMatrix(parent.sensoryConceptConnections);
+		memoryConceptConnections = M.cloneMatrix(parent.memoryConceptConnections);
+		conceptBias = M.cloneVector(parent.conceptBias);
+		conceptMotorConnections = M.cloneMatrix(parent.conceptMotorConnections);
+		motorBias = M.cloneVector(parent.motorBias);
+		conceptMemoryConnections = M.cloneMatrix(parent.conceptMemoryConnections);
+		memoryBias = M.cloneVector(parent.memoryBias);
 	}
 	
 	MatrixCell(MatrixCell parent1, MatrixCell parent2){
-		col = M.roll(0) ? parent1.col : parent2.col;
+		super(parent1, parent2);
+		col = M.roll(0.5) ? parent1.col : parent2.col;
 		energyPassedToChild = M.roll(0) ? parent1.energyPassedToChild : parent2.energyPassedToChild;
 		sensoryConceptConnections = M.mergeMatrices(parent1.sensoryConceptConnections, parent2.sensoryConceptConnections);
 		memoryConceptConnections = M.mergeMatrices(parent1.memoryConceptConnections, parent2.memoryConceptConnections);
@@ -305,7 +196,7 @@ class MatrixCell extends Cell {
 		Point targetPoint = getAdjacentLocation(facing);
 		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
 		if(target != null){
-			return target.interact(this, Interaction.EAT, null);
+			return target.interact(this, Interaction.EAT, size);
 		} else {
 			return false;
 		}
@@ -322,10 +213,15 @@ class MatrixCell extends Cell {
 		case DISPLACE:
 			return displace(interacter, this);
 		case EAT:
-			interacter.interact(this, Interaction.GIVE_ENERGY, energy);
-			energy = 0;
-			kill();
-			return true;
+			double eaterSize = (Double) data;
+			if(size < predationSizeThreshold*eaterSize) {
+				interacter.interact(this, Interaction.GIVE_ENERGY, energy);
+				energy = 0;
+				kill();
+				return true;
+			} else {
+				return false;
+			}
 		case GIVE_ENERGY:
 			int amount = (Integer)data;
 			energy = Math.min(energy + amount, GraphCell.maxStoredEnergy);
@@ -374,16 +270,18 @@ class MatrixCell extends Cell {
 		}
 	}
 	
+	@Override
 	public void mutate() {
-		col = mutateCol(col);
-		energyPassedToChild = mutate(energyPassedToChild, mutationProbability);
-		mutate(sensoryConceptConnections, mutationProbability);
-		mutate(memoryConceptConnections, mutationProbability);
-		mutate(conceptBias, mutationProbability);
-		mutate(conceptMotorConnections, mutationProbability);
-		mutate(motorBias, mutationProbability);
-		mutate(conceptMemoryConnections, mutationProbability);
-		mutate(memoryBias, mutationProbability);
+		super.mutate();
+		col = mutateCol(col, mutationProbability_col);
+		energyPassedToChild = mutateInt(energyPassedToChild, mutationProbability);
+		mutateMatrix(sensoryConceptConnections, mutationProbability);
+		mutateMatrix(memoryConceptConnections, mutationProbability);
+		mutateVector(conceptBias, mutationProbability);
+		mutateMatrix(conceptMotorConnections, mutationProbability);
+		mutateVector(motorBias, mutationProbability);
+		mutateMatrix(conceptMemoryConnections, mutationProbability);
+		mutateVector(memoryBias, mutationProbability);
 		
 	}
 	
@@ -618,7 +516,7 @@ class MatrixCell extends Cell {
 		
 		// Life and energy. //
 		lifetime ++;
-		energy -= energyCostPerTick;
+		energy -= getEnergyCostPerStep();
 		if(energy < 0){
 			kill();
 		}

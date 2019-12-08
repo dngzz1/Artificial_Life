@@ -100,6 +100,8 @@ class InfoWindow extends JFrame {
 		} else {
 			infoText += "Following cell #"+ArtificialLife.getCellIndex(followedCell)+"<br>";
 			infoText += "generation = "+followedCell.generation+"<br>";
+			infoText += "size = "+followedCell.size+"<br>"; 
+			infoText += "speed = "+followedCell.speed+"<br>"; 
 			infoText += "energy = "+followedCell.energy+"<br>";
 			infoText += "lifetime = "+followedCell.lifetime+"<br>";
 			infoText += "food eaten = "+followedCell.lifetimeFoodEaten+"<br>"; 
