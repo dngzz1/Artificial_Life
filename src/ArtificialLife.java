@@ -25,6 +25,8 @@ class ArtificialLife implements Runnable, KeyListener {
 	static int width, height;
 	static int minCellCount;
 	
+	private static int stepsPerDraw_acceleratedMode = 10000;
+	
 	static WorldObject [][] grid = new WorldObject[width][height];
 	
 	static TurnList turnList = new TurnList();
@@ -40,10 +42,6 @@ class ArtificialLife implements Runnable, KeyListener {
 	static boolean printLog = false;
 	static boolean step = false;
 	static boolean spawnNewCells = true;
-	
-	// XXX //
-	static boolean useNewCellDefinitions = true;
-	// XXX //
 	
 	// Auto-test variables //
 	static boolean isAutotesting = false;
@@ -351,12 +349,10 @@ class ArtificialLife implements Runnable, KeyListener {
 		Cell selectedCell = infoWindow.getFollowedCell();
 		if(selectedCell == null || !turnList.contains(selectedCell)){
 			infoWindow.setFollowedCell(getFirstCell());
-			infoWindow.update();
 		} else {
 			Cell nextCell = getNextCell(selectedCell);
 			if(nextCell != null){
 				infoWindow.setFollowedCell(nextCell);
-				infoWindow.update();
 			}
 		}
 	}
@@ -365,12 +361,10 @@ class ArtificialLife implements Runnable, KeyListener {
 		Cell selectedCell = infoWindow.getFollowedCell();
 		if(selectedCell == null || !turnList.contains(selectedCell)){
 			infoWindow.setFollowedCell(getLastCell());
-			infoWindow.update();
 		} else {
 			Cell previousCell = getPreviousCell(selectedCell);
 			if(previousCell != null){
 				infoWindow.setFollowedCell(previousCell);
-				infoWindow.update();
 			}
 		}
 	}
@@ -404,13 +398,13 @@ class ArtificialLife implements Runnable, KeyListener {
 					Food.energyGainPerFood = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("maxStoredEnergy=")){
-					GraphCell.maxStoredEnergy = Integer.parseInt(line.substring(dataIndex));
+					Cell.maxStoredEnergy = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("birthEnergyRequirement=")){
-					GraphCell.birthEnergyRequirement = Integer.parseInt(line.substring(dataIndex));
+					Cell.birthEnergyRequirement = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("energyUponBirth=")){
-					GraphCell.energyUponBirth = Integer.parseInt(line.substring(dataIndex));
+					Cell.energyUponBirth = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("energyCostPerTick=")){
 					GraphCell.energyCostPerTick = Integer.parseInt(line.substring(dataIndex));
@@ -482,18 +476,9 @@ class ArtificialLife implements Runnable, KeyListener {
 		// Step the things that need to. //
 		turnList.step();
 		
-		
-//		for(Stepable stepable : getStepList()){
-//			stepable.step();
-//		}
-		
 		// Spawn new cells if the population is too low. //
 		if(spawnNewCells && getCellCount() < minCellCount){
-			if(useNewCellDefinitions) {
-				placeRandomly(new MatrixCell());
-			} else {
-				placeRandomly(new GraphCell());
-			}
+			placeRandomly(new MatrixCell());
 		}
 		
 		stepCounter ++;
@@ -567,6 +552,7 @@ class ArtificialLife implements Runnable, KeyListener {
 		default:
 			break;
 		}
+		infoWindow.update();
 	}
 	
 	public void run() {
@@ -577,7 +563,7 @@ class ArtificialLife implements Runnable, KeyListener {
 				step();
 				step = false;
 			}
-			if(isDisplayOn){
+			if(isDisplayOn || stepCounter % stepsPerDraw_acceleratedMode == 0){
 				display.draw();
 			}
 			if(loadFile){

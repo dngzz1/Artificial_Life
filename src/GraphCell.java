@@ -6,13 +6,11 @@ import java.util.LinkedList;
 
 import files.TextFileHandler;
 
+@Deprecated
 class GraphCell extends Cell {
 	static float colorMutationSpeed = 0.4f;
 	static int initialMutations;
 	static int maxMutations;
-	static int maxStoredEnergy;
-	static int birthEnergyRequirement;
-	static int energyUponBirth;
 	static int energyCostPerTick;
 	static int energyCostPerNeuron;
 	static float mutationChance_addConnection;

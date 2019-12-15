@@ -7,6 +7,16 @@ import java.util.LinkedList;
 import files.TextFileHandler;
 
 class MatrixCell extends Cell {
+	
+	
+	/////////////////////////////////////////////////
+	// TODO - Run tests varying these parameters.
+	boolean useNonlinearNormalisation = true;
+	boolean useOnlyPositiveMotorSignals = true;
+	// TODO - Also run tests varying the nonlinear normalisation function.
+	/////////////////////////////////////////////////
+	
+	
 	static int rayCastLength = 10;
 	static double mutationProbability = 0.05;
 	static double mutationProbability_col = 0.9;
@@ -50,55 +60,33 @@ class MatrixCell extends Cell {
 	}
 	
 	MatrixCell(){
-		energy = GraphCell.energyUponBirth;
+		setupNeuralNetwork();
+		initialiseNeuralNetworkRandomly();
+		
+		energy = energyUponBirth;
 		col = M.randInt(validCellColors.length);
-		energyPassedToChild = GraphCell.energyUponBirth;
-
-		boolean initialiseRandomly = true;
-		boolean initialiseWithMutations = true;
-		
-		if(initialiseRandomly) {
-			double min = -1, max = 1;
-			M.setRandomEntries(sensoryConceptConnections, min, max);
-			M.setRandomEntries(memoryConceptConnections, min, max);
-			M.setRandomEntries(conceptBias, min, max);
-			M.setRandomEntries(conceptMotorConnections, min, max);
-			M.setRandomEntries(motorBias, min, max);
-			M.setRandomEntries(conceptMemoryConnections, min, max);
-			M.setRandomEntries(memoryBias, min, max);
-		}
-		
-		if(initialiseWithMutations) {
-//			for(int i = 0; i < 10; i ++)
-//				mutate();
-		}
-		mutate();
+		energyPassedToChild = energyUponBirth;
 	}
 	
 	MatrixCell(MatrixCell parent){
 		super(parent);
+		setupNeuralNetwork();
+		initialiseNeuralNetworkCloningParent(parent);
+		
 		col = parent.col;
 		energyPassedToChild = parent.energyPassedToChild;
-		sensoryConceptConnections = M.cloneMatrix(parent.sensoryConceptConnections);
-		memoryConceptConnections = M.cloneMatrix(parent.memoryConceptConnections);
-		conceptBias = M.cloneVector(parent.conceptBias);
-		conceptMotorConnections = M.cloneMatrix(parent.conceptMotorConnections);
-		motorBias = M.cloneVector(parent.motorBias);
-		conceptMemoryConnections = M.cloneMatrix(parent.conceptMemoryConnections);
-		memoryBias = M.cloneVector(parent.memoryBias);
 	}
 	
+	/**
+	 * We require that both parents belong to the same species.
+	 */
 	MatrixCell(MatrixCell parent1, MatrixCell parent2){
 		super(parent1, parent2);
+		setupNeuralNetwork();
+		initialiseNeuralNetworkMergingParents(parent1, parent2);
+		
 		col = M.roll(0.5) ? parent1.col : parent2.col;
-		energyPassedToChild = M.roll(0) ? parent1.energyPassedToChild : parent2.energyPassedToChild;
-		sensoryConceptConnections = M.mergeMatrices(parent1.sensoryConceptConnections, parent2.sensoryConceptConnections);
-		memoryConceptConnections = M.mergeMatrices(parent1.memoryConceptConnections, parent2.memoryConceptConnections);
-		conceptBias = M.mergeVectors(parent1.conceptBias, parent2.conceptBias);
-		conceptMotorConnections = M.mergeMatrices(parent1.conceptMotorConnections, parent2.conceptMotorConnections);
-		motorBias = M.mergeVectors(parent1.motorBias, parent2.motorBias);
-		conceptMemoryConnections = M.mergeMatrices(parent1.conceptMemoryConnections, parent2.conceptMemoryConnections);
-		memoryBias = M.mergeVectors(parent1.memoryBias, parent2.memoryBias);
+		energyPassedToChild = M.roll(0.5) ? parent1.energyPassedToChild : parent2.energyPassedToChild;
 	}
 	
 	MatrixCell(LinkedList<String> lineList){
@@ -206,6 +194,38 @@ class MatrixCell extends Cell {
 	public Color getColor() {
 		return validCellColors[col];
 	}
+	
+	private void initialiseNeuralNetworkCloningParent(MatrixCell parent) {
+		sensoryConceptConnections = M.cloneMatrix(parent.sensoryConceptConnections);
+		memoryConceptConnections = M.cloneMatrix(parent.memoryConceptConnections);
+		conceptBias = M.cloneVector(parent.conceptBias);
+		conceptMotorConnections = M.cloneMatrix(parent.conceptMotorConnections);
+		motorBias = M.cloneVector(parent.motorBias);
+		conceptMemoryConnections = M.cloneMatrix(parent.conceptMemoryConnections);
+		memoryBias = M.cloneVector(parent.memoryBias);
+	}
+	
+	private void initialiseNeuralNetworkMergingParents(MatrixCell parent1, MatrixCell parent2) {
+		sensoryConceptConnections = M.mergeMatrices(parent1.sensoryConceptConnections, parent2.sensoryConceptConnections);
+		memoryConceptConnections = M.mergeMatrices(parent1.memoryConceptConnections, parent2.memoryConceptConnections);
+		conceptBias = M.mergeVectors(parent1.conceptBias, parent2.conceptBias);
+		conceptMotorConnections = M.mergeMatrices(parent1.conceptMotorConnections, parent2.conceptMotorConnections);
+		motorBias = M.mergeVectors(parent1.motorBias, parent2.motorBias);
+		conceptMemoryConnections = M.mergeMatrices(parent1.conceptMemoryConnections, parent2.conceptMemoryConnections);
+		memoryBias = M.mergeVectors(parent1.memoryBias, parent2.memoryBias);
+	}
+	
+	private void initialiseNeuralNetworkRandomly() {
+		double min = -1, max = 1;
+		M.setRandomEntries(sensoryConceptConnections, min, max);
+		M.setRandomEntries(memoryConceptConnections, min, max);
+		M.setRandomEntries(conceptBias, min, max);
+		M.setRandomEntries(conceptMotorConnections, min, max);
+		M.setRandomEntries(motorBias, min, max);
+		M.setRandomEntries(conceptMemoryConnections, min, max);
+		M.setRandomEntries(memoryBias, min, max);
+		mutate();
+	}
 
 	@Override
 	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
@@ -224,7 +244,7 @@ class MatrixCell extends Cell {
 			}
 		case GIVE_ENERGY:
 			int amount = (Integer)data;
-			energy = Math.min(energy + amount, GraphCell.maxStoredEnergy);
+			energy = Math.min(energy + amount, maxStoredEnergy);
 			lifetimeFoodEaten += amount;
 			return true;
 		case KILL:
@@ -249,7 +269,7 @@ class MatrixCell extends Cell {
 		Point targetPoint = getAdjacentLocation(facing);
 		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
 		if(target != null && target instanceof MatrixCell){
-			((MatrixCell)target).mate = this;
+			((MatrixCell)target).setMate(this);
 			return true;
 		} else {
 			return false;
@@ -282,7 +302,40 @@ class MatrixCell extends Cell {
 		mutateVector(motorBias, mutationProbability);
 		mutateMatrix(conceptMemoryConnections, mutationProbability);
 		mutateVector(memoryBias, mutationProbability);
-		
+	}
+	
+	public void mutate_conceptNeuron_add() {
+		conceptNeurons = M.overwriteVector(new double[conceptNeurons.length + 1], conceptNeurons);
+		conceptBias = M.overwriteVector(new double[conceptNeurons.length], conceptBias);
+		sensoryConceptConnections = M.overwriteMatrix(new double[conceptNeurons.length][sensoryNeurons.length], sensoryConceptConnections);
+		memoryConceptConnections = M.overwriteMatrix(new double[conceptNeurons.length][memoryNeurons.length], memoryConceptConnections);
+		conceptMotorConnections = M.overwriteMatrix(new double[motorNeurons.length][conceptNeurons.length], conceptMotorConnections);
+		conceptMemoryConnections = M.overwriteMatrix(new double[memoryNeurons.length][conceptNeurons.length], conceptMemoryConnections);
+	}
+	
+	public void mutate_conceptNeuron_remove() {
+		int removedNeuronIndex = M.randInt(conceptNeurons.length);
+		conceptNeurons = M.shrinkVector(conceptNeurons, removedNeuronIndex);
+		conceptBias = M.shrinkVector(conceptBias, removedNeuronIndex);
+		sensoryConceptConnections = M.shrinkMatrixRows(sensoryConceptConnections, removedNeuronIndex);
+		memoryConceptConnections = M.shrinkMatrixRows(memoryConceptConnections, removedNeuronIndex);
+		conceptMotorConnections = M.shrinkMatrixCols(conceptMotorConnections, removedNeuronIndex);
+		conceptMemoryConnections = M.shrinkMatrixCols(conceptMemoryConnections, removedNeuronIndex);
+	}
+	
+	public void mutate_memoryNeuron_add() {
+		memoryNeurons = M.overwriteVector(new double[memoryNeurons.length + 1], memoryNeurons);
+		memoryBias = M.overwriteVector(new double[memoryNeurons.length], memoryBias);
+		memoryConceptConnections = M.overwriteMatrix(new double[conceptNeurons.length][memoryNeurons.length], memoryConceptConnections);
+		conceptMemoryConnections = M.overwriteMatrix(new double[memoryNeurons.length][conceptNeurons.length], conceptMemoryConnections);
+	}
+	
+	public void mutate_memoryNeuron_remove() {
+		int removedNeuronIndex = M.randInt(memoryNeurons.length);
+		memoryNeurons = M.shrinkVector(memoryNeurons, removedNeuronIndex);
+		memoryBias = M.shrinkVector(memoryBias, removedNeuronIndex);
+		memoryConceptConnections = M.shrinkMatrixCols(memoryConceptConnections, removedNeuronIndex);
+		conceptMemoryConnections = M.shrinkMatrixRows(conceptMemoryConnections, removedNeuronIndex);
 	}
 	
 	void printToFile(String filename){
@@ -402,8 +455,33 @@ class MatrixCell extends Cell {
 		return true;
 	}
 	
-	private boolean spawn(Direction direction, int energyPassedToChild){
-		int energyCost = GraphCell.birthEnergyRequirement + energyPassedToChild;
+	private void setMate(MatrixCell cell) {
+		if(species == cell.species) {
+			mate = cell;
+		}
+	}
+	
+	private void setupNeuralNetwork() {
+		// Neurons //
+		sensoryNeurons = new double[14];
+		memoryNeurons = new double[species.memoryNeuronCount()];
+		conceptNeurons = new double[species.conceptNeuronCount()];
+		motorNeurons = new double[8];
+		
+		// Connection layer 1 //
+		sensoryConceptConnections = new double[conceptNeurons.length][sensoryNeurons.length];
+		memoryConceptConnections = new double[conceptNeurons.length][memoryNeurons.length];
+		conceptBias = new double[conceptNeurons.length];
+		
+		// Connection layer 2 //
+		conceptMotorConnections = new double[motorNeurons.length][conceptNeurons.length];
+		motorBias = new double[motorNeurons.length];
+		conceptMemoryConnections = new double[memoryNeurons.length][conceptNeurons.length];
+		memoryBias = new double[memoryNeurons.length];
+	}
+	
+	private boolean spawn(Direction direction, int energyPassedToChild) {
+		int energyCost = birthEnergyRequirement + energyPassedToChild;
 		if(energy > energyCost){
 			Point p = M.add(direction.getVector(), location);
 			MatrixCell child = (mate == null) ? createChild(this) : createChild(this, mate);
@@ -462,7 +540,11 @@ class MatrixCell extends Cell {
 			}
 			
 			// Normalise so that the value is between 0 and 1. //
-			conceptNeurons[i] /= 1 + sensoryNeurons.length + memoryNeurons.length;
+			if(useNonlinearNormalisation) {
+				conceptNeurons[i] = M.normalise(conceptNeurons[i]);
+			} else {
+				conceptNeurons[i] /= 1 + sensoryNeurons.length + memoryNeurons.length;
+			}
 		}
 		for(int i = 0; i < motorNeurons.length; i ++) {
 			// Set neuron to the bias value. //
@@ -474,7 +556,11 @@ class MatrixCell extends Cell {
 			}
 			
 			// Normalise so that the value is between 0 and 1. //
-			motorNeurons[i] /= 1 + conceptNeurons.length;
+			if(useNonlinearNormalisation) {
+				motorNeurons[i] = M.normalise(motorNeurons[i]);
+			} else {
+				motorNeurons[i] /= 1 + conceptNeurons.length;
+			}
 		}
 		for(int i = 0; i < memoryNeurons.length; i ++) {
 			// Set neuron to the bias value. //
@@ -486,10 +572,12 @@ class MatrixCell extends Cell {
 			}
 			
 			// Normalise so that the value is between 0 and 1. //
-			memoryNeurons[i] /= 1 + conceptNeurons.length;
+			if(useNonlinearNormalisation) {
+				memoryNeurons[i] = M.normalise(memoryNeurons[i]);
+			} else {
+				memoryNeurons[i] /= 1 + conceptNeurons.length;
+			}
 		}
-		
-		
 		
 		// Make a list of all the motor neuron indexes
 		LinkedList<Integer> actionList = new LinkedList<Integer>();
@@ -500,14 +588,17 @@ class MatrixCell extends Cell {
 		// Attempt each action in order of neuron firing strength. //
 		while(!actionList.isEmpty()){
 			int motorToFire = actionList.getFirst();
-			
 			for(Integer neuronIndex: actionList){
 				if(motorNeurons[neuronIndex] > motorNeurons[motorToFire]) {
 					motorToFire = neuronIndex;
 				}
 			}
-			
 			actionList.remove(Integer.valueOf(motorToFire));
+			
+			if(useOnlyPositiveMotorSignals && motorNeurons[motorToFire] <= 0) {
+				break;
+			}
+			
 			boolean successful = takeAction(motorToFire);
 			if(successful){
 				break;

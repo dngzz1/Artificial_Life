@@ -4,18 +4,23 @@ import java.io.PrintWriter;
 import java.util.LinkedList;
 
 abstract class Cell extends WorldObject implements Stepable {
+	static int birthEnergyRequirement;
+	static int energyUponBirth;
+	static int maxStoredEnergy;
+	static double mutationChance_species = 0.02;
 	static int mutationRate_col = 2;
 	static double mutationRate_size = 0.2;
 	static Color[] validCellColors = validCellColors();
 	static double predationSizeThreshold = 0.8;
 	
 	// Cell Metadata //
+	Species species; // TODO  - species stuff //
 	int generation = 0;
 	int children = 0;
 	int lifetimeFoodEaten = 0;
 	
 	// Cell Data //
-	int energy = GraphCell.energyUponBirth;
+	int energy = energyUponBirth;
 	int lifetime = 0;
 	Direction facing = M.chooseRandom(Direction.values());
 	boolean isDead = false;
@@ -161,16 +166,19 @@ abstract class Cell extends WorldObject implements Stepable {
 	}
 	
 	Cell(){
+		species = new Species();
 		size = 20.0;
 		speed = 0.5;
 	}
 	
 	Cell(Cell parent){
+		species = parent.species;
 		size = parent.size;
 		speed = parent.speed;
 	}
 	
 	Cell(Cell parent1, Cell parent2){
+		species = parent1.species;
 		size = M.roll(0.5) ? parent1.size : parent2.size;
 		speed = M.roll(0.5) ? parent1.speed : parent2.speed;
 	}
@@ -204,7 +212,14 @@ abstract class Cell extends WorldObject implements Stepable {
 	}
 	
 	public void mutate() {
+		if(M.roll(mutationChance_species)) {
+			mutateSpecies();
+		}
 		speed = mutateDouble(speed, 0.0, 1.0);
 		size = mutateDoubleProportionally(size, mutationRate_size);
+	}
+	
+	public void mutateSpecies() {
+		species.mutate((MatrixCell)this);
 	}
 }

@@ -16,7 +16,7 @@ abstract class WorldObject {
 	
 	public static boolean pull(WorldObject puller, WorldObject pulled){
 		Point pullerLocation = puller.getLocation();
-		boolean canPull = push(puller, puller);
+		boolean canPull = push(pulled, puller);
 		if(canPull){
 			pulled.setLocation(pullerLocation);
 			return true;

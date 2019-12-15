@@ -21,6 +21,16 @@ class M extends maths.M {
 		}
 		return clone;
 	}
+	
+	static double normalise(double value) {
+		if(value < 0) {
+			return 0.0;
+		} else if(value > 1.0){
+			return 1.0;
+		} else {
+			return value;
+		}
+	}
 
 	static double[][] mergeMatrices(double[][] matrix1, double[][] matrix2){
 		if(matrix1.length == 0) {
@@ -54,6 +64,32 @@ class M extends maths.M {
 		}
 	}
 	
+	/**
+	 * Writes the entries of overwriter onto overwritee. Overwritee is assumed to be no smaller than overwriter.
+	 * @param overwritee
+	 * @param overwriter
+	 */
+	static double[][] overwriteMatrix(double[][] overwritee, double[][] overwriter) {
+		for(int row = 0; row < overwriter.length; row ++) {
+			for(int col = 0; col < overwriter[row].length; col ++) {
+				overwritee[row][col] = overwriter[row][col];
+			}
+		}
+		return overwritee;
+	}
+	
+	/**
+	 * Writes the entries of overwriter onto overwritee. Overwritee is assumed to be no smaller than overwriter.
+	 * @param overwritee
+	 * @param overwriter
+	 */
+	static double[] overwriteVector(double[] overwritee, double[] overwriter) {
+		for(int i = 0; i < overwriter.length; i ++) {
+			overwritee[i] = overwriter[i];
+		}
+		return overwritee;
+	}
+	
 	static void setRandomEntries(double[][] matrix, double min, double max) {
 		for(int row = 0; row < matrix.length; row ++) {
 			for(int col = 0; col < matrix[row].length; col ++) {
@@ -66,5 +102,52 @@ class M extends maths.M {
 		for(int i = 0; i < vector.length; i ++) {
 			vector[i] = rand(min, max);
 		}
+	}
+	
+	static double[][] shrinkMatrixCols(double[][] matrix, int columnToRemove) {
+		if(matrix.length == 0) {
+			return new double[0][0];
+		} else {
+			double[][] clone = new double[matrix.length][matrix[0].length - 1];
+			for(int row = 0; row < matrix.length; row ++) {
+				for(int col = 0; col < columnToRemove; col ++) {
+					clone[row][col] = matrix[row][col];
+				}
+				for(int col = columnToRemove + 1; col < matrix[row].length; col ++) {
+					clone[row][col - 1] = matrix[row][col];
+				}
+			}
+			return clone;
+		}
+	}
+	
+	static double[][] shrinkMatrixRows(double[][] matrix, int rowToRemove) {
+		if(matrix.length <= 1) {
+			return new double[0][0];
+		} else {
+			double[][] clone = new double[matrix.length - 1][matrix[0].length];
+			for(int row = 0; row < rowToRemove; row ++) {
+				for(int col = 0; col < matrix[row].length; col ++) {
+					clone[row][col] = matrix[row][col];
+				}
+			}
+			for(int row = rowToRemove + 1; row < matrix.length; row ++) {
+				for(int col = 0; col < matrix[row].length; col ++) {
+					clone[row - 1][col] = matrix[row][col];
+				}
+			}
+			return clone;
+		}
+	}
+	
+	static double[] shrinkVector(double[] vector, int coordinateToRemove) {
+		double[] clone = new double[vector.length - 1];
+		for(int i = 0; i < coordinateToRemove; i ++) {
+			clone[i] = vector[i];
+		}
+		for(int i = coordinateToRemove + 1; i < vector.length; i ++) {
+			clone[i - 1] = vector[i];
+		}
+		return clone;
 	}
 }
