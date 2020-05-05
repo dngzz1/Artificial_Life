@@ -1,24 +1,25 @@
 ~~~ Artificial Life ~~~
 
-An artificial life simulation. Populations of neural-networks-controlled cells  evolve over time due to random mutation and natural selection.
+An artificial life simulation. Populations of neural-networks-controlled cells evolve over time due to random mutation and natural selection.
 
 
 ~~ Installation ~~
 
-Requires JavaSE-1.6 or later. The data folder needs to be in the same directory as the jar file.
+Requires Java. The data folder needs to be in the same directory as the jar file.
 
 
 ~~ Instructions ~~
 
 space = pause/unpause the simulation.
+. = simulate 1 step (if paused).
 a = toggle accelerated mode (uncapped framerate).
 d = toggle the display. This significantly increases simulation speed while in accelerated mode.
-. = simulate 1 step (if paused).
-s = toggle generation 0 cell spawning (this should be disabled once a self-sustaining population has been achieved).
-+ and - = change the selected cell.
+m = toggle map view. 
+s = toggle generation 0 cell spawning (is is recommended to disable this once a self-sustaining population has been achieved).
+f = follow the selected cell.
 * = toggle pointer to selected cell.
 e = toggle eye-markers for the selected cell.
-n = load the neural network of the selected cell into neural network viewer.
+n = load the neural network of the selected cell into neural network viewer (currently not working).
 p = print cells to file.
 l = load cells from file.                                               
 

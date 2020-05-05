@@ -11,10 +11,10 @@ abstract class Cell extends WorldObject implements Stepable {
 	static int mutationRate_col = 2;
 	static double mutationRate_size = 0.2;
 	static Color[] validCellColors = validCellColors();
-	static double predationSizeThreshold = 0.8;
+	static double predationSizeThreshold = 0.5;
 	
 	// Cell Metadata //
-	Species species; // TODO  - species stuff //
+	Species species;
 	int generation = 0;
 	int children = 0;
 	int lifetimeFoodEaten = 0;
@@ -69,17 +69,14 @@ abstract class Cell extends WorldObject implements Stepable {
 	}
 	
 	protected static double mutateDoubleProportionally(double value, double rateOfChange) {
-		double multiplier;
+		double multiplier = M.rand(1.0, 1.0 + rateOfChange);
 		if(M.roll(0.5)) {
-			// 50% chance to increase. //
-			double maxMultiplier = 1.0 + rateOfChange;
-			multiplier = M.rand(1.0, maxMultiplier);
+//			// 50% chance to increase. //
+			return value*multiplier;
 		} else {
-			// 50% chance to decrease. //
-			double minMultiplier = 1.0 / (1.0 + rateOfChange);
-			multiplier = M.rand(minMultiplier, 1.0);
+//			// 50% chance to decrease. //
+			return value/multiplier;
 		}
-		return value*multiplier;
 	}
 	
 	protected static double mutateDoubleSigned(double value) {

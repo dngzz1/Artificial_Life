@@ -2,17 +2,19 @@ class Species {
 	private static int conceptNeuronMin = 5, conceptNeuronMax = 40;
 	private static int memoryNeuronMin = 0, memoryNeuronMax = 20;
 	
+	private static char[] characterList = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
+	
 	String name;
 	private int conceptNeuronCount, memoryNeuronCount;
 	
 	Species(){
-		name = "S"+M.randInt(10)+""+M.randInt(10);
+		name = ""+characterList[M.randInt(characterList.length)];
 		conceptNeuronCount = M.randInt(conceptNeuronMin, conceptNeuronMax);
 		memoryNeuronCount = M.randInt(memoryNeuronMin, memoryNeuronMax);
 	}
 	
 	private Species(Species parentSpecies) {
-		name = parentSpecies.name+"-"+M.randInt(10)+""+M.randInt(10);
+		name = parentSpecies.name+characterList[M.randInt(characterList.length)];
 		conceptNeuronCount = parentSpecies.conceptNeuronCount;
 		memoryNeuronCount = parentSpecies.memoryNeuronCount;
 	}

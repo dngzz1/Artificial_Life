@@ -9,8 +9,6 @@ class InfoWindow extends JFrame {
 	
 	private int stepsPerUpdate_acceleratedMode_displayOn = 100, stepsPerUpdate_acceleratedMode_displayOff = 1000;
 	
-	Cell followedCell = null;
-	
 	private JLabel infoLabel = new JLabel();
 	private JLabel speciesInfoLabel = new JLabel();
 	private JLabel cellInfoLabel = new JLabel();
@@ -22,10 +20,6 @@ class InfoWindow extends JFrame {
 		add(infoLabel);
 		add(speciesInfoLabel);
 		add(cellInfoLabel);
-	}
-	
-	public Cell getFollowedCell(){
-		return followedCell;
 	}
 	
 	public int getLatestGeneration(){
@@ -117,10 +111,6 @@ class InfoWindow extends JFrame {
 		return speciesInfo;
 	}
 	
-	public void setFollowedCell(Cell cell){
-		followedCell = cell;
-	}
-	
 	public void update(){
 		// We don't update every step when in accelerated mode. //
 		if(ArtificialLife.isAcceleratedModeOn && ArtificialLife.isRunning) {
@@ -143,6 +133,7 @@ class InfoWindow extends JFrame {
 		infoText += "Latest generation = "+latestGeneration+" with "+getGenerationCount(latestGeneration)+" cells."+"<br>";
 		infoText += "Oldest generation = "+oldestGeneration+" with "+getGenerationCount(oldestGeneration)+" cells."+"<br>";
 		infoText += "Total Children = "+ArtificialLife.totalChildren+"<br>";
+		infoText += "Median size = "+ArtificialLife.getCellSizeMedian()+"<br>";
 		infoText += "</html>";
 		infoLabel.setText(infoText);
 		
@@ -154,24 +145,37 @@ class InfoWindow extends JFrame {
 		speciesInfoText += "</html>";
 		speciesInfoLabel.setText(speciesInfoText);
 		
-		// Followed cell info text. //
+		// Cell info text. //
 		String cellInfoText = "<html>";
-		if(followedCell == null){
-			cellInfoText += "Not following cell"+"<br>";
+		
+		Cell cell = ArtificialLife.selectedCell;
+		WorldObject hoveredObject = ArtificialLife.getObjectAtCursor();
+		if(hoveredObject instanceof Cell) {
+			cell = (Cell)hoveredObject;
+		}
+		if(cell == null){
+			cellInfoText += "No cell"+"<br>";
 		} else {
-			cellInfoText += "Following cell #"+ArtificialLife.getCellIndex(followedCell)+"<br>";
-			cellInfoText += "species = "+followedCell.species.name+"<br>";
-			cellInfoText += "generation = "+followedCell.generation+"<br>";
-			cellInfoText += "size = "+followedCell.size+"<br>"; 
-			cellInfoText += "speed = "+followedCell.speed+"<br>"; 
-			cellInfoText += "energy = "+followedCell.energy+"<br>";
-			cellInfoText += "lifetime = "+followedCell.lifetime+"<br>";
-			cellInfoText += "food eaten = "+followedCell.lifetimeFoodEaten+"<br>"; 
-			cellInfoText += "number of childern = "+followedCell.children+"<br>"; 
+			if(cell == ArtificialLife.selectedCell) {
+				cellInfoText += "Cell (following)"+"<br>";
+			} else {
+				cellInfoText += "Cell"+"<br>";
+			}
+			cellInfoText += "#"+ArtificialLife.getCellIndex(cell)+"<br>";
+			cellInfoText += "species = "+cell.species.name+"<br>";
+			cellInfoText += "generation = "+cell.generation+"<br>";
+			cellInfoText += "size = "+cell.size+"<br>"; 
+			cellInfoText += "speed = "+cell.speed+"<br>"; 
+			cellInfoText += "energy = "+cell.energy+"<br>";
+			cellInfoText += "lifetime = "+cell.lifetime+"<br>";
+			cellInfoText += "food eaten = "+cell.lifetimeFoodEaten+"<br>"; 
+			cellInfoText += "number of childern = "+cell.children+"<br>"; 
 			
-			MatrixCell cell = (MatrixCell)followedCell;
-			cellInfoText += "# memory neurons = "+cell.memoryNeurons.length+"<br>"; 
-			cellInfoText += "# concept neurons = "+cell.conceptNeurons.length+"<br>"; 
+			if(cell instanceof MatrixCell) {
+				MatrixCell matrixCell = (MatrixCell)cell;
+				cellInfoText += "# memory neurons = "+matrixCell.memoryNeurons.length+"<br>"; 
+				cellInfoText += "# concept neurons = "+matrixCell.conceptNeurons.length+"<br>"; 
+			}
 		}
 		cellInfoText += "</html>";
 		cellInfoLabel.setText(cellInfoText);

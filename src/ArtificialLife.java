@@ -13,7 +13,6 @@ import javax.swing.JOptionPane;
 
 import files.ImageHandler;
 import files.TextFileHandler;
-
 import maths.M;
 
 class ArtificialLife implements Runnable, KeyListener {
@@ -34,6 +33,8 @@ class ArtificialLife implements Runnable, KeyListener {
 	static boolean isRunning;
 	static int stepCounter;
 	static int totalChildren = 0;
+	
+	static Cell selectedCell = null;
 	
 	// Controls //
 	static boolean isAcceleratedModeOn = false;
@@ -62,15 +63,15 @@ class ArtificialLife implements Runnable, KeyListener {
 		
 		// Start printing log file. //
 		autoTestLogFilename = "logs/autoTestLog_"+new Date().getTime()+".txt";
-		PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename);
-		pw.println("AUTO-RUNNING "+numberOfSimulations+" SIMULATIONS FOR "+simulationLength+" STEPS EACH");
-		pw.println();
-		pw.println("sim = simulation number");
-		pw.println("gen = latest generation");
-		pw.println("#ch = total number of children");
-		pw.println();
-		pw.println("sim:gen:#ch");
-		pw.close();
+//		PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename);
+//		pw.println("AUTO-RUNNING "+numberOfSimulations+" SIMULATIONS FOR "+simulationLength+" STEPS EACH");
+//		pw.println();
+//		pw.println("sim = simulation number");
+//		pw.println("gen = latest generation");
+//		pw.println("#ch = total number of children");
+//		pw.println();
+//		pw.println("sim:gen:#ch");
+//		pw.close();
 		
 		// Begin simulation //
 		isAutotesting = true;
@@ -80,29 +81,53 @@ class ArtificialLife implements Runnable, KeyListener {
 		new ArtificialLife().start();
 	}
 	
-	private void autoTest_step() {
-		// If the simulation has reached the termination condition, we log the results and restart. //
-		if(stepCounter >= simulationLength) {
-			// Print the log of this simulation to file. //
-			System.out.println("SIMULATION #"+simulationNumber+" COMPLETE");
-			int generation = infoWindow.getGenerationCount(infoWindow.getLatestGeneration());
+	private static void autoTest_step() {
+		
+		if(stepCounter % 10000 == 0) {
 			PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename, true);
-			pw.println(simulationNumber+":"+generation+":"+ArtificialLife.totalChildren);
-			pw.close();
-			printGenerationToFile();
 			
-			simulationNumber ++;
-			if(simulationNumber <= numberOfSimulations) {
-				// Reset for the next simulation . //
-				turnList.clear();
-				ArtificialLife.setup();
-				stepCounter = 0;
-			} else {
-				// End auto-test. //
-				isRunning = false;
-				System.exit(0);
+			double[] cellSizeList = new double[getCellCount()];
+			int i = 0;
+			for(Stepable stepable : getStepList()){
+				if(stepable instanceof Cell){
+					cellSizeList[i] = ((Cell)stepable).size;
+					i ++;
+				}
 			}
+			
+			String data = M.medianPercentile(cellSizeList, 10)
+					+":"+M.medianPercentile(cellSizeList, 30)
+					+":"+M.medianPercentile(cellSizeList, 50)
+					+":"+M.medianPercentile(cellSizeList, 70)
+					+":"+M.medianPercentile(cellSizeList, 90);
+			
+			pw.println(data);
+			pw.close();
 		}
+		
+		
+//		// If the simulation has reached the termination condition, we log the results and restart. //
+//		if(stepCounter >= simulationLength) {
+//			// Print the log of this simulation to file. //
+//			System.out.println("SIMULATION #"+simulationNumber+" COMPLETE");
+//			int generation = infoWindow.getGenerationCount(infoWindow.getLatestGeneration());
+//			PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename, true);
+//			pw.println(simulationNumber+":"+generation+":"+ArtificialLife.totalChildren);
+//			pw.close();
+//			printGenerationToFile();
+//			
+//			simulationNumber ++;
+//			if(simulationNumber <= numberOfSimulations) {
+//				// Reset for the next simulation . //
+//				turnList.clear();
+//				ArtificialLife.setup();
+//				stepCounter = 0;
+//			} else {
+//				// End auto-test. //
+//				isRunning = false;
+//				System.exit(0);
+//			}
+//		}
 	}
 	
 	public static int getCellCount(){
@@ -128,6 +153,18 @@ class ArtificialLife implements Runnable, KeyListener {
 		return -1;
 	}
 	
+	public static double getCellSizeMedian() {
+		double[] cellSizeList = new double[getCellCount()];
+		int i = 0;
+		for(Stepable stepable : getStepList()){
+			if(stepable instanceof Cell){
+				cellSizeList[i] = ((Cell)stepable).size;
+				i ++;
+			}
+		}
+		return M.median(cellSizeList);
+	}
+	
 	public static Cell getFirstCell() {
 		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
@@ -135,10 +172,6 @@ class ArtificialLife implements Runnable, KeyListener {
 			}
 		}
 		return null;
-	}
-	
-	public static Cell getFollowedCell() {
-		return infoWindow.getFollowedCell();
 	}
 	
 	public static Cell getLastCell(){
@@ -161,6 +194,19 @@ class ArtificialLife implements Runnable, KeyListener {
 			}
 		}
 		return null;
+	}
+	
+	public static WorldObject getObjectAt(int x, int y) {
+		return getObjectAt(new Point(x, y));
+	}
+	
+	public static WorldObject getObjectAt(Point p) {
+		ArtificialLife.wrapPoint(p);
+		return ArtificialLife.grid[p.x][p.y];
+	}
+	
+	public static WorldObject getObjectAtCursor() {
+		return getObjectAt(Display.viewX, Display.viewY);
 	}
 	
 	public static Cell getPreviousCell(Cell cell) {
@@ -345,27 +391,9 @@ class ArtificialLife implements Runnable, KeyListener {
 		ArtificialLife.grid[object.location.x][object.location.y] = null;
 	}
 	
-	public static void selectNextCell() {
-		Cell selectedCell = infoWindow.getFollowedCell();
-		if(selectedCell == null || !turnList.contains(selectedCell)){
-			infoWindow.setFollowedCell(getFirstCell());
-		} else {
-			Cell nextCell = getNextCell(selectedCell);
-			if(nextCell != null){
-				infoWindow.setFollowedCell(nextCell);
-			}
-		}
-	}
-	
-	public static void selectPrevoiusCell(){
-		Cell selectedCell = infoWindow.getFollowedCell();
-		if(selectedCell == null || !turnList.contains(selectedCell)){
-			infoWindow.setFollowedCell(getLastCell());
-		} else {
-			Cell previousCell = getPreviousCell(selectedCell);
-			if(previousCell != null){
-				infoWindow.setFollowedCell(previousCell);
-			}
+	public void select(WorldObject selection) {
+		if(selection instanceof Cell) {
+			selectedCell = (Cell)selection;
 		}
 	}
 	
@@ -482,12 +510,17 @@ class ArtificialLife implements Runnable, KeyListener {
 		}
 		
 		stepCounter ++;
-		infoWindow.update();
 	}
 	
 	public static void wrapPoint(Point p){//TODO : this should be improved.
-		p.x = (p.x+width)%width;
-		p.y = (p.y+height)%height;
+		while(p.x < 0) {
+			p.x += width;
+		}
+		while(p.y < 0) {
+			p.y += height;
+		}
+		p.x = p.x%width;
+		p.y = p.y%height;
 	}
 	
 	private ArtificialLife(){
@@ -500,7 +533,28 @@ class ArtificialLife implements Runnable, KeyListener {
 		infoWindow.setVisible(true);
 	}
 	
-	public void keyPressed(KeyEvent e) {}
+	public void keyPressed(KeyEvent e) {
+		switch (e.getKeyCode()) {
+		case KeyEvent.VK_UP:
+			selectedCell = null;
+			Display.viewY = (Display.viewY + height - 1)%height;
+			break;
+		case KeyEvent.VK_DOWN:
+			selectedCell = null;
+			Display.viewY = (Display.viewY + 1)%height;
+			break;
+		case KeyEvent.VK_LEFT:
+			selectedCell = null;
+			Display.viewX = (Display.viewX + width - 1)%width;
+			break;
+		case KeyEvent.VK_RIGHT:
+			selectedCell = null;
+			Display.viewX = (Display.viewX + 1)%width;
+			break;
+		default:
+			break;
+		}
+	}
 	
 	public void keyReleased(KeyEvent e) {}
 	
@@ -515,12 +569,18 @@ class ArtificialLife implements Runnable, KeyListener {
 		case 'e':
 			Display.drawEyeRays = !Display.drawEyeRays;
 			break;
+		case 'f':
+			select(getObjectAt(Display.viewX, Display.viewY));
+			break;
 		case 'l':
 			loadFile = true;
 			break;
+		case 'm':
+			display.toggleDisplayMode();
+			break;
 		case 'n':
-			if(infoWindow.followedCell != null){
-				neuralNetworkViewer.loadCell(infoWindow.followedCell);
+			if(selectedCell != null){
+				neuralNetworkViewer.loadCell(selectedCell);
 			}
 			break;
 		case 'p':
@@ -535,12 +595,6 @@ class ArtificialLife implements Runnable, KeyListener {
 		case '.':
 			step = true;
 			break;
-		case '+':
-			selectNextCell();
-			break;
-		case '-':
-			selectPrevoiusCell();
-			break;
 		case '*':
 			Display.drawFollowHighlight = !Display.drawFollowHighlight;
 			break;
@@ -552,7 +606,6 @@ class ArtificialLife implements Runnable, KeyListener {
 		default:
 			break;
 		}
-		infoWindow.update();
 	}
 	
 	public void run() {
@@ -563,6 +616,7 @@ class ArtificialLife implements Runnable, KeyListener {
 				step();
 				step = false;
 			}
+			infoWindow.update();
 			if(isDisplayOn || stepCounter % stepsPerDraw_acceleratedMode == 0){
 				display.draw();
 			}
