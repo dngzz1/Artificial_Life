@@ -4,9 +4,11 @@ class Wall extends WorldObject {
 	
 	Color color;
 	boolean isDisplaceable;
+	boolean isMovable;
 	
-	Wall(boolean isDisplacable, Color color){
+	Wall(boolean isDisplacable, boolean isMovable, Color color){
 		this.isDisplaceable = isDisplacable;
+		this.isMovable = isMovable;
 		this.color = color;
 	}
 
@@ -19,9 +21,17 @@ class Wall extends WorldObject {
 	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
 		case PUSH:
-			return push(interacter, this);
+			if(isMovable){
+				return push(interacter, this);
+			} else {
+				return false;
+			}
 		case PULL:
-			return pull(interacter, this);
+			if(isMovable){
+				return pull(interacter, this);
+			} else {
+				return false;
+			}
 		case DISPLACE:
 			if(isDisplaceable){
 				return displace(interacter, this);

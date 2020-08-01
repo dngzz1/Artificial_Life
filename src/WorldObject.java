@@ -60,6 +60,10 @@ abstract class WorldObject {
 	
 	public abstract boolean interact(WorldObject interacter, Interaction interactionType, Object data);
 	
+	public void remove() {
+		ArtificialLife.grid[location.x][location.y] = null;
+	}
+	
 	public void setLocation(Point p) {
 		setLocation(p.x, p.y);
 	}

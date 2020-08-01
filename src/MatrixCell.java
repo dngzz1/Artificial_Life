@@ -29,21 +29,21 @@ class MatrixCell extends Cell {
 	MatrixCell mate = null;
 	
 	// Neurons //
-	double[] sensoryNeurons = new double[14];
-	double[] memoryNeurons = new double[5];
-	double[] conceptNeurons = new double[30];
-	double[] motorNeurons = new double[8];
+	double[] sensoryNeurons;
+	double[] memoryNeurons;
+	double[] conceptNeurons;
+	double[] motorNeurons;
 	
 	// Connection layer 1 //
-	double[][] sensoryConceptConnections = new double[conceptNeurons.length][sensoryNeurons.length];
-	double[][] memoryConceptConnections = new double[conceptNeurons.length][memoryNeurons.length];
-	double[] conceptBias = new double[conceptNeurons.length];
+	double[][] sensoryConceptConnections;
+	double[][] memoryConceptConnections;
+	double[] conceptBias;
 	
 	// Connection layer 2 //
-	double[][] conceptMotorConnections = new double[motorNeurons.length][conceptNeurons.length];
-	double[] motorBias = new double[motorNeurons.length];
-	double[][] conceptMemoryConnections = new double[memoryNeurons.length][conceptNeurons.length];
-	double[] memoryBias = new double[memoryNeurons.length];
+	double[][] conceptMotorConnections;
+	double[] motorBias;
+	double[][] conceptMemoryConnections;
+	double[] memoryBias;
 	
 	private static MatrixCell createChild(MatrixCell parent) {
 		MatrixCell child = new MatrixCell(parent);
@@ -151,6 +151,16 @@ class MatrixCell extends Cell {
 		memoryBias = loadVector(lineList.remove());
 	}
 	
+	private boolean attack() {
+		Point targetPoint = getAdjacentLocation(facing);
+		WorldObject target = ArtificialLife.getObjectAt(targetPoint);
+		if(target != null){
+			return target.interact(this, Interaction.ATTACK, 100);
+		} else {
+			return false;
+		}
+	}
+	
 	@Override
 	protected MatrixCell clone() {
 		return new MatrixCell(this);
@@ -244,7 +254,7 @@ class MatrixCell extends Cell {
 			}
 		case GIVE_ENERGY:
 			int amount = (Integer)data;
-			energy = Math.min(energy + amount, maxStoredEnergy);
+			energy = Math.min(energy + amount, getMaxStoredEnergy());
 			lifetimeFoodEaten += amount;
 			return true;
 		case KILL:
@@ -466,7 +476,7 @@ class MatrixCell extends Cell {
 		sensoryNeurons = new double[14];
 		memoryNeurons = new double[species.memoryNeuronCount()];
 		conceptNeurons = new double[species.conceptNeuronCount()];
-		motorNeurons = new double[8];
+		motorNeurons = new double[11];
 		
 		// Connection layer 1 //
 		sensoryConceptConnections = new double[conceptNeurons.length][sensoryNeurons.length];
@@ -480,10 +490,10 @@ class MatrixCell extends Cell {
 		memoryBias = new double[memoryNeurons.length];
 	}
 	
-	private boolean spawn(Direction direction, int energyPassedToChild) {
+	private boolean spawnChild(Direction direction, int energyPassedToChild) {
 		int energyCost = birthEnergyRequirement + energyPassedToChild;
 		if(energy > energyCost){
-			Point p = M.add(direction.getVector(), location);
+			Point p = getAdjacentLocation(direction);
 			MatrixCell child = (mate == null) ? createChild(this) : createChild(this, mate);
 			boolean placedSuccessfully = ArtificialLife.place(child, p);
 			if(placedSuccessfully){
@@ -494,6 +504,34 @@ class MatrixCell extends Cell {
 					mate.children ++;
 				}
 				ArtificialLife.totalChildren ++;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean spawnFood() {
+		int energyCost = Food.energyGainPerFood;
+		if(energy > energyCost) {
+			Point p = getAdjacentLocation(facing);
+			Food food = new Food();
+			boolean placedSuccessfully = ArtificialLife.place(food, p);
+			if(placedSuccessfully) {
+				energy -= energyCost;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean spawnWall() {
+		int energyCost = Food.energyGainPerFood;
+		if(energy > energyCost) {
+			Point p = getAdjacentLocation(facing);
+			DestructibleWall wall = new DestructibleWall(100);
+			boolean placedSuccessfully = ArtificialLife.place(wall, p);
+			if(placedSuccessfully) {
+				energy -= energyCost;
 				return true;
 			}
 		}
@@ -607,7 +645,7 @@ class MatrixCell extends Cell {
 		
 		// Life and energy. //
 		lifetime ++;
-		energy -= getEnergyCostPerStep();
+		energy -= getEnergyCostPerTurn();
 		if(energy < 0){
 			kill();
 		}
@@ -628,9 +666,15 @@ class MatrixCell extends Cell {
 		case 5:
 			return displace();
 		case 6:
-			return spawn(M.chooseRandom(Direction.values()), energyPassedToChild);
+			return spawnChild(M.chooseRandom(Direction.values()), energyPassedToChild);
 		case 7:
 			return mate();
+		case 8:
+			return spawnFood();
+		case 9:
+			return spawnWall();
+		case 10:
+			return attack();
 		default:
 			return false;
 		}

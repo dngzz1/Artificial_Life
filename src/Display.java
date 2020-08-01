@@ -12,14 +12,15 @@ class Display extends Frame {
 	static boolean drawEyeRays = false;
 	static boolean drawFollowHighlight = false;
 	
-	static Color bgColor = Color.cyan;
-	static Color gridColor = Color.gray;
+	static Color bgColor_summer = new Color(180, 180, 180);
+	static Color bgColor_winter = new Color(128, 128, 128);
+	static Color bgColor = Color.gray;
 	
 	
 	static boolean drawAll = false;
 	static int viewX = 0, viewY = 0;
-	static int tileSize = 8;
-	static int viewRadiusInTiles = 48;
+	static int tileSize = 4;
+	static int viewRadiusInTiles = 128;
 	
 	
 	Display(){
@@ -38,13 +39,11 @@ class Display extends Frame {
 	
 	public void draw(){
 		Graphics2D g = (Graphics2D)getBufferStrategy().getDrawGraphics();
-		g.setBackground(bgColor);
-		g.clearRect(0, 0, getWidth(), getHeight());
 		Insets insets = getInsets();
 		g.translate(insets.left, insets.top);
 		
 		//Draw background
-		g.setColor(gridColor);
+		g.setColor(bgColor);
 		g.fillRect(0, 0, getWidth(), getHeight());
 		
 		// Update the view location if we are following a cell. //

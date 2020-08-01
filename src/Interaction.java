@@ -5,4 +5,5 @@ enum Interaction {
 	KILL,
 	PULL,
 	PUSH,
+	ATTACK,
 }

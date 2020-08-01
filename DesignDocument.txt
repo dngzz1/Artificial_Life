@@ -3,6 +3,7 @@ DESIGN DOCUMENT: Artificial Life
 
 ~~ TO-DO ~~
 
+> Have cell speed be decided by the cell, so they can vary their speed depending on the situation.
 > Test different setups for matrix-type cells: number of memory/concept neurons, number of concept neuron layers, mutation rates.
 > Improved saving/loading. Separate handling the map and the cells. More options.
 > More varied food sources for cells. Different types of food sources, in order to encourage multiple non-competing species.

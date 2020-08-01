@@ -6,7 +6,7 @@ import java.util.LinkedList;
 abstract class Cell extends WorldObject implements Stepable {
 	static int birthEnergyRequirement;
 	static int energyUponBirth;
-	static int maxStoredEnergy;
+	static int maxStoredEnergyMultiplier = 5000;
 	static double mutationChance_species = 0.02;
 	static int mutationRate_col = 2;
 	static double mutationRate_size = 0.2;
@@ -182,17 +182,13 @@ abstract class Cell extends WorldObject implements Stepable {
 	
 	abstract void drawSenses(Graphics2D g);
 	
-	protected int getEnergyCostPerStep() {
-		return getEnergyCostPerTurnFromSize() + getEnergyCostPerTurnFromSpeed();
+	protected int getEnergyCostPerTurn() {
+		// This means that energy cost per game-world step equals (size + 50/turnLength).
+		return (int)(size/speed) + 100;
 	}
 	
-	private int getEnergyCostPerTurnFromSize() {
-		return (int) size;
-	}
-	
-	private int getEnergyCostPerTurnFromSpeed() {
-		int maxEnergyCostPerTurnFromSpeed = 30;
-		return (int) (maxEnergyCostPerTurnFromSpeed*speed);
+	protected int getMaxStoredEnergy() {
+		return (int)(size*maxStoredEnergyMultiplier);
 	}
 	
 	@Override

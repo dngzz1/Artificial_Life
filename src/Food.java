@@ -30,8 +30,4 @@ class Food extends WorldObject {
 			return false;
 		}
 	}
-	
-	private void remove() {
-		ArtificialLife.grid[location.x][location.y] = null;
-	}
 }

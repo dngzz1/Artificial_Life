@@ -4,10 +4,10 @@
 fpsCap=30
 // Maximum frames per second when not in accelerated mode.
 
-map=map0.png
+map=map7.png
 // The map to use. The image dimensions give the size of the world. Objects are placed in the world according to pixel color.
 
-drawScale=3
+drawScale=2
 // The size each grid square is drawn, in pixels.
 
 minCellCount=100
@@ -19,16 +19,16 @@ initialMutations=50
 maxMutations=20
 // The cap on the number of mutations a child cell can get.
 
-energyGainPerFood=2500
+energyGainPerFood=5000
 // The amount of energy gained when a cell eats food.
 
-maxStoredEnergy=250000
-// The maximum amount of energy a cell can store.
+maxStoredEnergyMultiplier=5000
+// The maximum amount of energy a cell can store per unit size.
 
-birthEnergyRequirement=2500
+birthEnergyRequirement=1000
 // The amount of energy used when a cell produces a child (in addition to energy transferred to the child).
 
-energyUponBirth=10000
+energyUponBirth=20000
 // The amount of energy a generation 0 cell starts with.
 
 energyCostPerTick=0

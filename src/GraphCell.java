@@ -237,7 +237,7 @@ class GraphCell extends Cell {
 			return true;
 		case GIVE_ENERGY:
 			int amount = (Integer)data;
-			energy = Math.min(energy + amount, maxStoredEnergy);
+			energy = Math.min(energy + amount, getMaxStoredEnergy());
 			lifetimeFoodEaten += amount;
 			return true;
 		case KILL:

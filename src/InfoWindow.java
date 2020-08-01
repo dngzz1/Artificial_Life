@@ -126,6 +126,7 @@ class InfoWindow extends JFrame {
 		// General info text. //
 		String infoText = "<html>";
 		infoText += "Step Counter = "+ArtificialLife.stepCounter+"<br>";
+		infoText += "Season = "+(ArtificialLife.isSummer ? "Summer" : "Winter")+"<br>";
 		infoText += "Number of cells = "+ArtificialLife.getCellCount()+"<br>";
 		infoText += "spawning = "+(ArtificialLife.spawnNewCells ? "ON" : "OFF")+"<br>";
 		int latestGeneration = getLatestGeneration();
@@ -134,6 +135,7 @@ class InfoWindow extends JFrame {
 		infoText += "Oldest generation = "+oldestGeneration+" with "+getGenerationCount(oldestGeneration)+" cells."+"<br>";
 		infoText += "Total Children = "+ArtificialLife.totalChildren+"<br>";
 		infoText += "Median size = "+ArtificialLife.getCellSizeMedian()+"<br>";
+		infoText += "Median size = "+ArtificialLife.getCellSpeedMedian()+"<br>";
 		infoText += "</html>";
 		infoLabel.setText(infoText);
 		
@@ -169,7 +171,7 @@ class InfoWindow extends JFrame {
 			cellInfoText += "energy = "+cell.energy+"<br>";
 			cellInfoText += "lifetime = "+cell.lifetime+"<br>";
 			cellInfoText += "food eaten = "+cell.lifetimeFoodEaten+"<br>"; 
-			cellInfoText += "number of childern = "+cell.children+"<br>"; 
+			cellInfoText += "number of children = "+cell.children+"<br>"; 
 			
 			if(cell instanceof MatrixCell) {
 				MatrixCell matrixCell = (MatrixCell)cell;

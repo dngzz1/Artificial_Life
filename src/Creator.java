@@ -36,6 +36,6 @@ class Creator extends WorldObject implements Stepable {
 	public void step(){
 		int x = M.randInt(location.x - 1, location.x + 1);
 		int y = M.randInt(location.y - 1, location.y + 1);
-		ArtificialLife.place(new Wall(true, Color.DARK_GRAY), x, y);
+		ArtificialLife.place(new Wall(true, false, Color.DARK_GRAY), x, y);
 	}
 }

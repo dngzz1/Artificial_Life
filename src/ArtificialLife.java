@@ -26,7 +26,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	private static int stepsPerDraw_acceleratedMode = 10000;
 	
-	static WorldObject [][] grid = new WorldObject[width][height];
+	static WorldObject[][] grid = new WorldObject[width][height];
 	
 	static TurnList turnList = new TurnList();
 	
@@ -35,6 +35,10 @@ class ArtificialLife implements Runnable, KeyListener {
 	static int totalChildren = 0;
 	
 	static Cell selectedCell = null;
+	
+	// Seasons //
+	static int seasonDuration = 1000;
+	static boolean isSummer = true;
 	
 	// Controls //
 	static boolean isAcceleratedModeOn = false;
@@ -154,7 +158,11 @@ class ArtificialLife implements Runnable, KeyListener {
 	}
 	
 	public static double getCellSizeMedian() {
-		double[] cellSizeList = new double[getCellCount()];
+		int cellCount = getCellCount();
+		if(cellCount == 0) {
+			return 0;
+		}
+		double[] cellSizeList = new double[cellCount];
 		int i = 0;
 		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
@@ -163,6 +171,22 @@ class ArtificialLife implements Runnable, KeyListener {
 			}
 		}
 		return M.median(cellSizeList);
+	}
+	
+	public static double getCellSpeedMedian() {
+		int cellCount = getCellCount();
+		if(cellCount == 0) {
+			return 0;
+		}
+		double[] cellSpeedList = new double[cellCount];
+		int i = 0;
+		for(Stepable stepable : getStepList()){
+			if(stepable instanceof Cell){
+				cellSpeedList[i] = ((Cell)stepable).speed;
+				i ++;
+			}
+		}
+		return M.median(cellSpeedList);
 	}
 	
 	public static Cell getFirstCell() {
@@ -425,8 +449,8 @@ class ArtificialLife implements Runnable, KeyListener {
 				if(line.startsWith("energyGainPerFood=")){
 					Food.energyGainPerFood = Integer.parseInt(line.substring(dataIndex));
 				}
-				if(line.startsWith("maxStoredEnergy=")){
-					Cell.maxStoredEnergy = Integer.parseInt(line.substring(dataIndex));
+				if(line.startsWith("maxStoredEnergyMultiplier=")){
+					Cell.maxStoredEnergyMultiplier = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("birthEnergyRequirement=")){
 					Cell.birthEnergyRequirement = Integer.parseInt(line.substring(dataIndex));
@@ -486,13 +510,15 @@ class ArtificialLife implements Runnable, KeyListener {
 			for(int y = 0; y < height; y ++){
 				int rgb = mapImage.getRGB(x, y);
 				if(rgb == Color.BLACK.getRGB()){
-					place(new Wall(false, Color.BLACK), x, y);
+					place(new Wall(false, true, Color.BLACK), x, y);
 				} else if(rgb == Color.BLUE.getRGB()){
-					place(new Wall(true, Color.BLUE), x, y);
+					place(new Wall(false, false, Color.BLUE), x, y);
 				} else if(rgb == Color.RED.getRGB()){
 					place(new Hazard(), x, y);
 				} else if(rgb == Color.GREEN.getRGB()){
-					place(new Plant(), x, y);
+					place(new Plant(true), x, y);
+				} else if(rgb == Color.YELLOW.getRGB()){
+					place(new Plant(false), x, y);
 				} else if(rgb == Color.MAGENTA.getRGB()){
 					place(new Creator(), x, y);
 				}
@@ -510,6 +536,11 @@ class ArtificialLife implements Runnable, KeyListener {
 		}
 		
 		stepCounter ++;
+		
+		// Seasons//
+		if(stepCounter % seasonDuration == 0) {
+			isSummer = !isSummer;
+		}
 	}
 	
 	public static void wrapPoint(Point p){//TODO : this should be improved.

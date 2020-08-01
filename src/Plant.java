@@ -1,9 +1,16 @@
 import java.awt.Color;
 
 class Plant extends WorldObject implements Stepable {
-	static Color color = new Color(0, 100, 0);
+	static Color fruitingCol = new Color(153, 153, 0);
+	static Color idleCol = new Color(102, 102, 0);
 	
+	boolean fruitsInSummer;
+	boolean isMovable = false;
 	int stepsToBearFruit = M.randInt(50, 70);
+	
+	Plant(boolean fruitsInSummer){
+		this.fruitsInSummer = fruitsInSummer;
+	}
 	
 	private void fruit() {
 		int x = M.randInt(location.x - 1, location.x + 1);
@@ -13,7 +20,7 @@ class Plant extends WorldObject implements Stepable {
 	
 	@Override
 	public Color getColor() {
-		return color;
+		return isFruiting() ? fruitingCol : idleCol;
 	}
 	
 	@Override
@@ -25,18 +32,36 @@ class Plant extends WorldObject implements Stepable {
 	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
 		case PUSH:
-			return push(interacter, this);
+			if(isMovable) {
+				return push(interacter, this);
+			} else {
+				return false;
+			}
 		case PULL:
-			return pull(interacter, this);
+			if(isMovable) {
+				return pull(interacter, this);
+			} else {
+				return false;
+			}
 		case DISPLACE:
-			return displace(interacter, this);
+			if(isMovable) {
+				return displace(interacter, this);
+			} else {
+				return false;
+			}
 		default:
 			return false;
 		}
 	}
 	
+	private boolean isFruiting() {
+		return (ArtificialLife.isSummer && fruitsInSummer) || (!ArtificialLife.isSummer && !fruitsInSummer);
+	}
+	
 	@Override
 	public void step(){
-		fruit();
+		if(isFruiting()) {
+			fruit();
+		}
 	}
 }
