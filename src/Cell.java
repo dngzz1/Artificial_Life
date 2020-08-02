@@ -10,8 +10,8 @@ abstract class Cell extends WorldObject implements Stepable {
 	static double mutationChance_species = 0.02;
 	static int mutationRate_col = 2;
 	static double mutationRate_size = 0.2;
-	static Color[] validCellColors = validCellColors();
-	static double predationSizeThreshold = 0.5;
+	static final Color[] validCellColors = validCellColors();
+	static final double predationSizeThreshold = 0.5;
 	
 	// Cell Metadata //
 	Species species;
@@ -131,33 +131,31 @@ abstract class Cell extends WorldObject implements Stepable {
 	}
 	
 	private static final Color[] validCellColors() {
-		if(validCellColors == null) {
-			int n = 8;
-			validCellColors = new Color[6*n];
-			for(int i = 0; i < n; i ++) {
-				int g = i*255/n;
-				validCellColors[i] = new Color(255, g, 0);
-			}
-			for(int i = 0; i < n; i ++) {
-				int r = 255 - i*255/n;
-				validCellColors[n + i] = new Color(r, 255, 0);
-			}
-			for(int i = 0; i < n; i ++) {
-				int b = i*255/n;
-				validCellColors[2*n + i] = new Color(0, 255, b);
-			}
-			for(int i = 0; i < n; i ++) {
-				int g = 255 - i*255/n;
-				validCellColors[3*n + i] = new Color(0, g, 255);
-			}
-			for(int i = 0; i < n; i ++) {
-				int r = i*255/n;
-				validCellColors[4*n + i] = new Color(r, 0, 255);
-			}
-			for(int i = 0; i < n; i ++) {
-				int b = 255 - i*255/n;
-				validCellColors[5*n + i] = new Color(255, 0, b);
-			}
+		int n = 8;
+		Color[] validCellColors = new Color[6*n];
+		for(int i = 0; i < n; i ++) {
+			int g = i*255/n;
+			validCellColors[i] = new Color(255, g, 0);
+		}
+		for(int i = 0; i < n; i ++) {
+			int r = 255 - i*255/n;
+			validCellColors[n + i] = new Color(r, 255, 0);
+		}
+		for(int i = 0; i < n; i ++) {
+			int b = i*255/n;
+			validCellColors[2*n + i] = new Color(0, 255, b);
+		}
+		for(int i = 0; i < n; i ++) {
+			int g = 255 - i*255/n;
+			validCellColors[3*n + i] = new Color(0, g, 255);
+		}
+		for(int i = 0; i < n; i ++) {
+			int r = i*255/n;
+			validCellColors[4*n + i] = new Color(r, 0, 255);
+		}
+		for(int i = 0; i < n; i ++) {
+			int b = 255 - i*255/n;
+			validCellColors[5*n + i] = new Color(255, 0, b);
 		}
 		return validCellColors;
 	}

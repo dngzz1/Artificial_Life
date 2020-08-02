@@ -152,13 +152,16 @@ class MatrixCell extends Cell {
 	}
 	
 	private boolean attack() {
-		Point targetPoint = getAdjacentLocation(facing);
-		WorldObject target = ArtificialLife.getObjectAt(targetPoint);
-		if(target != null){
-			return target.interact(this, Interaction.ATTACK, 100);
-		} else {
-			return false;
+		int energyCost = Food.energyGainPerFood/2;
+		if(energy > energyCost) {
+			Point targetPoint = getAdjacentLocation(facing);
+			WorldObject target = ArtificialLife.getObjectAt(targetPoint);
+			if(target != null){
+				energy -= energyCost;
+				return target.interact(this, Interaction.ATTACK, 100);
+			}
 		}
+		return false;
 	}
 	
 	@Override
@@ -247,7 +250,7 @@ class MatrixCell extends Cell {
 			if(size < predationSizeThreshold*eaterSize) {
 				interacter.interact(this, Interaction.GIVE_ENERGY, energy);
 				energy = 0;
-				kill();
+				kill(CauseOfDeath.PREDATION);
 				return true;
 			} else {
 				return false;
@@ -258,7 +261,7 @@ class MatrixCell extends Cell {
 			lifetimeFoodEaten += amount;
 			return true;
 		case KILL:
-			kill();
+			kill((CauseOfDeath)data);
 			return true;
 		case PULL:
 			return pull(interacter, this);
@@ -270,9 +273,10 @@ class MatrixCell extends Cell {
 		}
 	}
 	
-	void kill(){
+	void kill(CauseOfDeath cause){
 		isDead = true;
 		ArtificialLife.remove(this);
+		ArtificialLife.totalDeathsBy[cause.ordinal()] ++;
 	}
 	
 	private boolean mate() {
@@ -500,10 +504,11 @@ class MatrixCell extends Cell {
 				energy -= energyCost;
 				child.energy = energyPassedToChild;
 				children ++;
+				ArtificialLife.totalChildren ++;
 				if(mate != null) {
 					mate.children ++;
+					ArtificialLife.totalChildrenWithTwoParents ++;
 				}
-				ArtificialLife.totalChildren ++;
 				return true;
 			}
 		}
@@ -647,7 +652,7 @@ class MatrixCell extends Cell {
 		lifetime ++;
 		energy -= getEnergyCostPerTurn();
 		if(energy < 0){
-			kill();
+			kill(CauseOfDeath.STARVATION);
 		}
 	}
 	

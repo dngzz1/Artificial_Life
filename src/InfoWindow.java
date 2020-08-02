@@ -13,6 +13,37 @@ class InfoWindow extends JFrame {
 	private JLabel speciesInfoLabel = new JLabel();
 	private JLabel cellInfoLabel = new JLabel();
 	
+	private static String cellInfoText(Cell cell) {
+		String cellInfoText = "";
+		
+		// Note if we are currently following the cell. //
+		if(cell == ArtificialLife.selectedCell) {
+			cellInfoText += "Cell (following)"+"<br>";
+		} else {
+			cellInfoText += "Cell"+"<br>";
+		}
+		
+		// General information. //
+		cellInfoText += "#"+ArtificialLife.getCellIndex(cell)+"<br>";
+		cellInfoText += "species = "+cell.species.shortName()+"<br>";
+		cellInfoText += "generation = "+cell.generation+"<br>";
+		cellInfoText += "size = "+cell.size+"<br>"; 
+		cellInfoText += "speed = "+cell.speed+"<br>"; 
+		cellInfoText += "energy = "+cell.energy+"<br>";
+		cellInfoText += "lifetime = "+cell.lifetime+"<br>";
+		cellInfoText += "food eaten = "+cell.lifetimeFoodEaten+"<br>"; 
+		cellInfoText += "number of children = "+cell.children+"<br>"; 
+		
+		// MatrixCell specific information. //
+		if(cell instanceof MatrixCell) {
+			MatrixCell matrixCell = (MatrixCell)cell;
+			cellInfoText += "# memory neurons = "+matrixCell.memoryNeurons.length+"<br>"; 
+			cellInfoText += "# concept neurons = "+matrixCell.conceptNeurons.length+"<br>"; 
+		}
+		
+		return cellInfoText;
+	}
+	
 	InfoWindow(){
 		setTitle("Info Window");
 		setSize(800, 400);
@@ -105,7 +136,7 @@ class InfoWindow extends JFrame {
 			int indexToRemove = speciesList.indexOf(topSpecies);
 			speciesList.remove(indexToRemove);
 			speciesCellCountList.remove(indexToRemove);
-			String line = topSpecies.name+" : "+topCellCount;
+			String line = topSpecies.shortName()+" : "+topCellCount;
 			speciesInfo.add(line);
 		}
 		return speciesInfo;
@@ -133,9 +164,13 @@ class InfoWindow extends JFrame {
 		int oldestGeneration = getOldestGeneration();
 		infoText += "Latest generation = "+latestGeneration+" with "+getGenerationCount(latestGeneration)+" cells."+"<br>";
 		infoText += "Oldest generation = "+oldestGeneration+" with "+getGenerationCount(oldestGeneration)+" cells."+"<br>";
-		infoText += "Total Children = "+ArtificialLife.totalChildren+"<br>";
-		infoText += "Median size = "+ArtificialLife.getCellSizeMedian()+"<br>";
-		infoText += "Median size = "+ArtificialLife.getCellSpeedMedian()+"<br>";
+		infoText += "Total children = "+ArtificialLife.totalChildren+"<br>";
+		infoText += "Total children with two parents = "+ArtificialLife.totalChildrenWithTwoParents+"<br>";
+		for(CauseOfDeath causeOfDeath : CauseOfDeath.values()) {
+			infoText += "Total deaths by "+causeOfDeath.name().toLowerCase()+" = "+ArtificialLife.totalDeathsBy[causeOfDeath.ordinal()]+"<br>";
+		}
+		infoText += "Median size = "+(float)ArtificialLife.getCellSizeMedian()+"<br>";
+		infoText += "Median speed = "+(float)ArtificialLife.getCellSpeedMedian()+"<br>";
 		infoText += "</html>";
 		infoLabel.setText(infoText);
 		
@@ -148,36 +183,17 @@ class InfoWindow extends JFrame {
 		speciesInfoLabel.setText(speciesInfoText);
 		
 		// Cell info text. //
-		String cellInfoText = "<html>";
 		
-		Cell cell = ArtificialLife.selectedCell;
+		
+		String cellInfoText = "<html>";
 		WorldObject hoveredObject = ArtificialLife.getObjectAtCursor();
-		if(hoveredObject instanceof Cell) {
-			cell = (Cell)hoveredObject;
-		}
-		if(cell == null){
-			cellInfoText += "No cell"+"<br>";
+		if(hoveredObject == null) {
+			cellInfoText += "Here: -"+"<br>";
+		} else if(hoveredObject instanceof Cell) {
+			Cell hoveredCell = (Cell)hoveredObject;
+			cellInfoText += cellInfoText(hoveredCell);
 		} else {
-			if(cell == ArtificialLife.selectedCell) {
-				cellInfoText += "Cell (following)"+"<br>";
-			} else {
-				cellInfoText += "Cell"+"<br>";
-			}
-			cellInfoText += "#"+ArtificialLife.getCellIndex(cell)+"<br>";
-			cellInfoText += "species = "+cell.species.name+"<br>";
-			cellInfoText += "generation = "+cell.generation+"<br>";
-			cellInfoText += "size = "+cell.size+"<br>"; 
-			cellInfoText += "speed = "+cell.speed+"<br>"; 
-			cellInfoText += "energy = "+cell.energy+"<br>";
-			cellInfoText += "lifetime = "+cell.lifetime+"<br>";
-			cellInfoText += "food eaten = "+cell.lifetimeFoodEaten+"<br>"; 
-			cellInfoText += "number of children = "+cell.children+"<br>"; 
-			
-			if(cell instanceof MatrixCell) {
-				MatrixCell matrixCell = (MatrixCell)cell;
-				cellInfoText += "# memory neurons = "+matrixCell.memoryNeurons.length+"<br>"; 
-				cellInfoText += "# concept neurons = "+matrixCell.conceptNeurons.length+"<br>"; 
-			}
+			cellInfoText += "Here: "+hoveredObject.toString()+"<br>";
 		}
 		cellInfoText += "</html>";
 		cellInfoLabel.setText(cellInfoText);
@@ -185,5 +201,4 @@ class InfoWindow extends JFrame {
 		// Repaint once label text is updated. //
 		repaint();
 	}
-	
 }

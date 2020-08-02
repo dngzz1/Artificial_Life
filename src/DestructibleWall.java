@@ -1,6 +1,6 @@
 import java.awt.Color;
 
-class DestructibleWall extends WorldObject {
+class DestructibleWall extends WorldObject implements Stepable {
 	
 	int hp;
 	
@@ -29,5 +29,15 @@ class DestructibleWall extends WorldObject {
 		default:
 			return false;
 		}
+	}
+
+	@Override
+	public int getStepsToNextTurn() {
+		return hp;
+	}
+
+	@Override
+	public void step() {
+		hit(1);
 	}
 }

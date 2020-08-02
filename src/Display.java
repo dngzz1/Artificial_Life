@@ -19,8 +19,8 @@ class Display extends Frame {
 	
 	static boolean drawAll = false;
 	static int viewX = 0, viewY = 0;
-	static int tileSize = 4;
-	static int viewRadiusInTiles = 128;
+	static int tileSize = 10;
+	static int viewRadiusInTiles = 48;
 	
 	
 	Display(){
@@ -42,15 +42,9 @@ class Display extends Frame {
 		Insets insets = getInsets();
 		g.translate(insets.left, insets.top);
 		
-		//Draw background
+		// Draw background //
 		g.setColor(bgColor);
 		g.fillRect(0, 0, getWidth(), getHeight());
-		
-		// Update the view location if we are following a cell. //
-		if(ArtificialLife.selectedCell != null) {
-			viewX = ArtificialLife.selectedCell.getX();
-			viewY = ArtificialLife.selectedCell.getY();
-		}
 		
 		if(drawAll) { // If in map-mode, draw the whole map. //
 			// Draw world objects //

@@ -4,10 +4,10 @@
 fpsCap=30
 // Maximum frames per second when not in accelerated mode.
 
-map=map7.png
+map=map8F.png
 // The map to use. The image dimensions give the size of the world. Objects are placed in the world according to pixel color.
 
-drawScale=2
+drawScale=3
 // The size each grid square is drawn, in pixels.
 
 minCellCount=100

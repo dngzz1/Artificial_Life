@@ -33,6 +33,8 @@ class ArtificialLife implements Runnable, KeyListener {
 	static boolean isRunning;
 	static int stepCounter;
 	static int totalChildren = 0;
+	static int totalChildrenWithTwoParents = 0;
+	static int totalDeathsBy[] = new int[CauseOfDeath.values().length];
 	
 	static Cell selectedCell = null;
 	
@@ -41,12 +43,15 @@ class ArtificialLife implements Runnable, KeyListener {
 	static boolean isSummer = true;
 	
 	// Controls //
+	static final short SIM_SPEED_PAUSED = 0, SIM_SPEED_STANDARD = 1, SIM_SPEED_ACCELERATED = 2, SIM_SPEED_SUPERFAST = 3;
+	static short simulationSpeed = SIM_SPEED_STANDARD;
 	static boolean isAcceleratedModeOn = false;
 	static boolean isDisplayOn = true;
 	static boolean loadFile = false;
 	static boolean printLog = false;
 	static boolean step = false;
 	static boolean spawnNewCells = true;
+	static boolean inPlaceMode = false;
 	
 	// Auto-test variables //
 	static boolean isAutotesting = false;
@@ -421,6 +426,33 @@ class ArtificialLife implements Runnable, KeyListener {
 		}
 	}
 	
+	public static void setSimulationSpeed(short simSpeed) {
+		switch (simSpeed) {
+		case SIM_SPEED_PAUSED:
+			isRunning = false;
+			isAcceleratedModeOn = false;
+			isDisplayOn = true;
+			break;
+		case SIM_SPEED_STANDARD:
+			isRunning = true;
+			isAcceleratedModeOn = false;
+			isDisplayOn = true;
+			break;
+		case SIM_SPEED_ACCELERATED:
+			isRunning = true;
+			isAcceleratedModeOn = true;
+			isDisplayOn = true;
+			break;
+		case SIM_SPEED_SUPERFAST:
+			isRunning = true;
+			isAcceleratedModeOn = true;
+			isDisplayOn = false;
+			break;
+		default:
+			throw new RuntimeException("Invalid simulation speed");
+		}
+	}
+	
 	public static void setup(){
 		LinkedList<String> initData = TextFileHandler.readEntireFile("data/init.txt");
 		String mapFilename = null;
@@ -519,6 +551,10 @@ class ArtificialLife implements Runnable, KeyListener {
 					place(new Plant(true), x, y);
 				} else if(rgb == Color.YELLOW.getRGB()){
 					place(new Plant(false), x, y);
+				} else if(rgb == Plant_Fruit.color.getRGB()){
+					place(new Plant_Fruit(), x, y);
+				} else if(rgb == Plant_Tuber.color.getRGB()){
+					place(new Plant_Tuber(), x, y);
 				} else if(rgb == Color.MAGENTA.getRGB()){
 					place(new Creator(), x, y);
 				}
@@ -531,16 +567,31 @@ class ArtificialLife implements Runnable, KeyListener {
 		turnList.step();
 		
 		// Spawn new cells if the population is too low. //
-		if(spawnNewCells && getCellCount() < minCellCount){
+		int cellCount = getCellCount();
+		if(spawnNewCells && cellCount < minCellCount){
 			placeRandomly(new MatrixCell());
 		}
 		
-		stepCounter ++;
+		// Pause simulation if there has been an extinction. //
+		if(!spawnNewCells && cellCount == 0) {
+			isRunning = false;
+			isAcceleratedModeOn = false;
+			isDisplayOn = true;
+		}
+		
+		// Update the view location if we are following a cell. //
+		if(selectedCell != null) {
+			Display.viewX = ArtificialLife.selectedCell.getX();
+			Display.viewY = ArtificialLife.selectedCell.getY();
+		}
 		
 		// Seasons//
 		if(stepCounter % seasonDuration == 0) {
 			isSummer = !isSummer;
 		}
+		
+		// Finally, increment the step counter. //
+		stepCounter ++;
 	}
 	
 	public static void wrapPoint(Point p){//TODO : this should be improved.
@@ -590,52 +641,82 @@ class ArtificialLife implements Runnable, KeyListener {
 	public void keyReleased(KeyEvent e) {}
 	
 	public void keyTyped(KeyEvent e) {
-		switch (e.getKeyChar()) {
-		case 'a':
-			isAcceleratedModeOn = !isAcceleratedModeOn;
-			break;
-		case 'd':
-			isDisplayOn = !isDisplayOn;
-			break;
-		case 'e':
-			Display.drawEyeRays = !Display.drawEyeRays;
-			break;
-		case 'f':
-			select(getObjectAt(Display.viewX, Display.viewY));
-			break;
-		case 'l':
-			loadFile = true;
-			break;
-		case 'm':
-			display.toggleDisplayMode();
-			break;
-		case 'n':
-			if(selectedCell != null){
-				neuralNetworkViewer.loadCell(selectedCell);
+		if(!inPlaceMode) {
+			switch (e.getKeyChar()) {
+			case ' ':
+				if(isRunning) {
+					setSimulationSpeed(SIM_SPEED_PAUSED);
+				} else {
+					setSimulationSpeed(SIM_SPEED_STANDARD);
+				}
+				break;
+			case '1':
+				setSimulationSpeed(SIM_SPEED_STANDARD);
+				break;
+			case '2':
+				setSimulationSpeed(SIM_SPEED_ACCELERATED);
+				break;
+			case '3':
+				setSimulationSpeed(SIM_SPEED_SUPERFAST);
+				break;
+			case 'e':
+				Display.drawEyeRays = !Display.drawEyeRays;
+				break;
+			case 'f':
+				select(getObjectAt(Display.viewX, Display.viewY));
+				break;
+			case 'l':
+				loadFile = true;
+				break;
+			case 'm':
+				display.toggleDisplayMode();
+				break;
+			case 'n':
+				if(selectedCell != null){
+					neuralNetworkViewer.loadCell(selectedCell);
+				}
+				break;
+			case 'p':
+				printLog = true;
+				break;
+			case 's':
+				spawnNewCells = !spawnNewCells;
+				break;
+			case '.':
+				step = true;
+				break;
+			case '*':
+				Display.drawFollowHighlight = !Display.drawFollowHighlight;
+				break;
+			case 'q':
+				inPlaceMode = true;
+				
+				//			placeRandomly(new Cell2());
+
+				break;
+			case 'r':
+
+				getObjectAt(Display.viewX, Display.viewY).remove();
+
+				break;
+			default:
+				break;
 			}
-			break;
-		case 'p':
-			printLog = true;
-			break;
-		case 's':
-			spawnNewCells = !spawnNewCells;
-			break;
-		case ' ':
-			isRunning = !isRunning;
-			break;
-		case '.':
-			step = true;
-			break;
-		case '*':
-			Display.drawFollowHighlight = !Display.drawFollowHighlight;
-			break;
-		case 'q'://XXX
-			
-//			placeRandomly(new Cell2());
-			
-			break;
-		default:
-			break;
+		} else {
+			switch (e.getKeyChar()) {
+			case 'f':
+				place(new Food(), Display.viewX, Display.viewY);
+				break;
+			case 'h':
+				place(new Hazard(), Display.viewX, Display.viewY);
+				break;
+			case 'w':
+				place(new Wall(false, false, Color.BLACK), Display.viewX, Display.viewY);
+				break;
+			case 'q':
+				inPlaceMode = false;
+				break;
+			}
 		}
 	}
 	

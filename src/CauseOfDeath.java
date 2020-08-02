@@ -1,0 +1,3 @@
+enum CauseOfDeath {
+	HAZARD, PREDATION, STARVATION, OTHER;
+}

@@ -4,19 +4,19 @@ class Species {
 	
 	private static char[] characterList = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
 	
-	String name;
+	private String name;
 	private int conceptNeuronCount, memoryNeuronCount;
 	
 	Species(){
-		name = ""+characterList[M.randInt(characterList.length)];
 		conceptNeuronCount = M.randInt(conceptNeuronMin, conceptNeuronMax);
 		memoryNeuronCount = M.randInt(memoryNeuronMin, memoryNeuronMax);
+		name = "C"+conceptNeuronCount+"M"+memoryNeuronCount;
 	}
 	
 	private Species(Species parentSpecies) {
-		name = parentSpecies.name+characterList[M.randInt(characterList.length)];
 		conceptNeuronCount = parentSpecies.conceptNeuronCount;
 		memoryNeuronCount = parentSpecies.memoryNeuronCount;
+		name = parentSpecies.name;
 	}
 	
 	int conceptNeuronCount() {
@@ -49,9 +49,11 @@ class Species {
 		double chanceToRemove = (cell.species.conceptNeuronCount <= 1) ? 0.0 : 0.5;
 		if(M.roll(chanceToRemove)) {
 			cell.species.conceptNeuronCount --;
+			cell.species.name += "c";
 			cell.mutate_conceptNeuron_remove();
 		} else {
 			cell.species.conceptNeuronCount ++;
+			cell.species.name += "C";
 			cell.mutate_conceptNeuron_add();
 		}
 	}
@@ -61,10 +63,21 @@ class Species {
 		double chanceToRemove = (cell.species.memoryNeuronCount == 0) ? 0.0 : 0.5;
 		if(M.roll(chanceToRemove)) {
 			cell.species.memoryNeuronCount --;
+			cell.species.name += "m";
 			cell.mutate_memoryNeuron_remove();
 		} else {
 			cell.species.memoryNeuronCount ++;
+			cell.species.name += "M";
 			cell.mutate_memoryNeuron_add();
+		}
+	}
+	
+	public String shortName() {
+		int nameLength = name.length();
+		if(nameLength <= 15) {
+			return name;
+		} else {
+			return name.substring(0, 5)+"..."+nameLength+"..."+name.substring(nameLength - 5);
 		}
 	}
 }
