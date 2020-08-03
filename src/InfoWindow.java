@@ -7,53 +7,11 @@ import javax.swing.*;
 class InfoWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
-	private int stepsPerUpdate_acceleratedMode_displayOn = 100, stepsPerUpdate_acceleratedMode_displayOff = 1000;
+	private JLabel infoLabel_general = new JLabel();
+	private JLabel infoLabel_species = new JLabel();
+	private JLabel infoLabel_object = new JLabel();
 	
-	private JLabel infoLabel = new JLabel();
-	private JLabel speciesInfoLabel = new JLabel();
-	private JLabel cellInfoLabel = new JLabel();
-	
-	private static String cellInfoText(Cell cell) {
-		String cellInfoText = "";
-		
-		// Note if we are currently following the cell. //
-		if(cell == ArtificialLife.selectedCell) {
-			cellInfoText += "Cell (following)"+"<br>";
-		} else {
-			cellInfoText += "Cell"+"<br>";
-		}
-		
-		// General information. //
-		cellInfoText += "#"+ArtificialLife.getCellIndex(cell)+"<br>";
-		cellInfoText += "species = "+cell.species.shortName()+"<br>";
-		cellInfoText += "generation = "+cell.generation+"<br>";
-		cellInfoText += "size = "+cell.size+"<br>"; 
-		cellInfoText += "speed = "+cell.speed+"<br>"; 
-		cellInfoText += "energy = "+cell.energy+"<br>";
-		cellInfoText += "lifetime = "+cell.lifetime+"<br>";
-		cellInfoText += "food eaten = "+cell.lifetimeFoodEaten+"<br>"; 
-		cellInfoText += "number of children = "+cell.children+"<br>"; 
-		
-		// MatrixCell specific information. //
-		if(cell instanceof MatrixCell) {
-			MatrixCell matrixCell = (MatrixCell)cell;
-			cellInfoText += "# memory neurons = "+matrixCell.memoryNeurons.length+"<br>"; 
-			cellInfoText += "# concept neurons = "+matrixCell.conceptNeurons.length+"<br>"; 
-		}
-		
-		return cellInfoText;
-	}
-	
-	InfoWindow(){
-		setTitle("Info Window");
-		setSize(800, 400);
-		setLayout(new GridLayout(1, 0));
-		add(infoLabel);
-		add(speciesInfoLabel);
-		add(cellInfoLabel);
-	}
-	
-	public int getLatestGeneration(){
+	private static int generationMax(){
 		int latestGeneration = 0;
 		for(Stepable stepable : ArtificialLife.getStepList()){
 			if(stepable instanceof Cell){
@@ -66,7 +24,7 @@ class InfoWindow extends JFrame {
 		return latestGeneration;
 	}
 	
-	public int getOldestGeneration(){
+	private static int generationMin(){
 		int oldestGeneration = Integer.MAX_VALUE;
 		for(Stepable stepable : ArtificialLife.getStepList()){
 			if(stepable instanceof Cell){
@@ -79,7 +37,7 @@ class InfoWindow extends JFrame {
 		return oldestGeneration;
 	}
 	
-	public int getGenerationCount(int generation){
+	private static int generationCellCount(int generation){
 		int cellCount = 0;
 		for(Stepable stepable : ArtificialLife.getStepList()){
 			if(stepable instanceof Cell){
@@ -92,7 +50,62 @@ class InfoWindow extends JFrame {
 		return cellCount;
 	}
 	
-	private LinkedList<String> getSpeciesInfo() {
+	private static String infoText_general() {
+		String infoText = "<html>";
+		if(!Controls.isGameRunning) {
+			infoText += "Step Counter = "+ArtificialLife.stepCounter+" (PAUSED)"+"<br>";
+		} else if(Controls.isFramerateCapped) {
+			infoText += "Step Counter = "+ArtificialLife.stepCounter+" x"+Controls.stepsPerDraw+" (CAPPED)"+"<br>";
+		} else {
+			infoText += "Step Counter = "+ArtificialLife.stepCounter+" x"+Controls.stepsPerDraw+" (UNCAPPED)"+"<br>";
+		}
+		infoText += "Season = "+(ArtificialLife.isSummer ? "Summer" : "Winter")+"<br>";
+		infoText += "Number of cells = "+ArtificialLife.getCellCount()+"<br>";
+		infoText += "spawning = "+(Controls.spawnNewCells ? "ON" : "OFF")+"<br>";
+		int latestGeneration = generationMax();
+		int oldestGeneration = generationMin();
+		infoText += "Latest generation = "+latestGeneration+" with "+generationCellCount(latestGeneration)+" cells."+"<br>";
+		infoText += "Oldest generation = "+oldestGeneration+" with "+generationCellCount(oldestGeneration)+" cells."+"<br>";
+		infoText += "Total children = "+ArtificialLife.totalChildren+"<br>";
+		infoText += "Total children with two parents = "+ArtificialLife.totalChildrenWithTwoParents+"<br>";
+		for(CauseOfDeath causeOfDeath : CauseOfDeath.values()) {
+			infoText += "Total deaths by "+causeOfDeath.name().toLowerCase()+" = "+ArtificialLife.totalDeathsBy[causeOfDeath.ordinal()]+"<br>";
+		}
+		infoText += "Median size = "+(float)ArtificialLife.getCellSizeMedian()+"<br>";
+		infoText += "Median speed = "+(float)ArtificialLife.getCellSpeedMedian()+"<br>";
+		infoText += "</html>";
+		return infoText;
+	}
+	
+	private static String infoText_object() {
+		String infoText = "<html>";
+		if(Controls.inPlaceMode) {
+			infoText += "** Placing/Removing Objects **"+"<br>";
+		}
+		WorldObject hoveredObject = ArtificialLife.getObjectAtCursor();
+		if(hoveredObject == null) {
+			infoText += "Here: [no object]"+"<br>";
+		} else if(hoveredObject == ArtificialLife.selectedCell) {
+			infoText += "Here: "+hoveredObject.getDisplayName()+" (following)"+"<br>";
+			infoText += hoveredObject.getInfo();
+		} else {
+			infoText += "Here: "+hoveredObject.getDisplayName()+"<br>";
+			infoText += hoveredObject.getInfo();
+		}
+		infoText += "</html>";
+		return infoText;
+	}
+	
+	private static String infoText_species() {
+		String infoText = "<html>";
+		for(String line : speciesInfo()) {
+			infoText += line+"<br>";
+		}
+		infoText += "</html>";
+		return infoText;
+	}
+	
+	private static LinkedList<String> speciesInfo() {
 		// Get the data. //
 		LinkedList<Species> speciesList = new LinkedList<Species>();
 		LinkedList<Integer> speciesCellCountList = new LinkedList<Integer>();
@@ -136,67 +149,26 @@ class InfoWindow extends JFrame {
 			int indexToRemove = speciesList.indexOf(topSpecies);
 			speciesList.remove(indexToRemove);
 			speciesCellCountList.remove(indexToRemove);
-			String line = topSpecies.shortName()+" : "+topCellCount;
+			String line = topSpecies.getDisplayName()+" : "+topCellCount;
 			speciesInfo.add(line);
 		}
 		return speciesInfo;
 	}
 	
+	InfoWindow(){
+		setTitle("Info Window");
+		setSize(800, 400);
+		setLayout(new GridLayout(1, 0));
+		add(infoLabel_general);
+		add(infoLabel_species);
+		add(infoLabel_object);
+	}
+	
 	public void update(){
-		// We don't update every step when in accelerated mode. //
-		if(ArtificialLife.isAcceleratedModeOn && ArtificialLife.isRunning) {
-			if(ArtificialLife.isDisplayOn) {
-				if(ArtificialLife.stepCounter % stepsPerUpdate_acceleratedMode_displayOn != 0) {
-					return;
-				}
-			} else if(ArtificialLife.stepCounter % stepsPerUpdate_acceleratedMode_displayOff != 0) {
-				return;
-			}
-		}
-		
-		// General info text. //
-		String infoText = "<html>";
-		infoText += "Step Counter = "+ArtificialLife.stepCounter+"<br>";
-		infoText += "Season = "+(ArtificialLife.isSummer ? "Summer" : "Winter")+"<br>";
-		infoText += "Number of cells = "+ArtificialLife.getCellCount()+"<br>";
-		infoText += "spawning = "+(ArtificialLife.spawnNewCells ? "ON" : "OFF")+"<br>";
-		int latestGeneration = getLatestGeneration();
-		int oldestGeneration = getOldestGeneration();
-		infoText += "Latest generation = "+latestGeneration+" with "+getGenerationCount(latestGeneration)+" cells."+"<br>";
-		infoText += "Oldest generation = "+oldestGeneration+" with "+getGenerationCount(oldestGeneration)+" cells."+"<br>";
-		infoText += "Total children = "+ArtificialLife.totalChildren+"<br>";
-		infoText += "Total children with two parents = "+ArtificialLife.totalChildrenWithTwoParents+"<br>";
-		for(CauseOfDeath causeOfDeath : CauseOfDeath.values()) {
-			infoText += "Total deaths by "+causeOfDeath.name().toLowerCase()+" = "+ArtificialLife.totalDeathsBy[causeOfDeath.ordinal()]+"<br>";
-		}
-		infoText += "Median size = "+(float)ArtificialLife.getCellSizeMedian()+"<br>";
-		infoText += "Median speed = "+(float)ArtificialLife.getCellSpeedMedian()+"<br>";
-		infoText += "</html>";
-		infoLabel.setText(infoText);
-		
-		// Species info text. //
-		String speciesInfoText = "<html>";
-		for(String line : getSpeciesInfo()) {
-			speciesInfoText += line+"<br>";
-		}
-		speciesInfoText += "</html>";
-		speciesInfoLabel.setText(speciesInfoText);
-		
-		// Cell info text. //
-		
-		
-		String cellInfoText = "<html>";
-		WorldObject hoveredObject = ArtificialLife.getObjectAtCursor();
-		if(hoveredObject == null) {
-			cellInfoText += "Here: -"+"<br>";
-		} else if(hoveredObject instanceof Cell) {
-			Cell hoveredCell = (Cell)hoveredObject;
-			cellInfoText += cellInfoText(hoveredCell);
-		} else {
-			cellInfoText += "Here: "+hoveredObject.toString()+"<br>";
-		}
-		cellInfoText += "</html>";
-		cellInfoLabel.setText(cellInfoText);
+		// General/Species/Object info text. //
+		infoLabel_general.setText(infoText_general());
+		infoLabel_species.setText(infoText_species());
+		infoLabel_object.setText(infoText_object());
 		
 		// Repaint once label text is updated. //
 		repaint();

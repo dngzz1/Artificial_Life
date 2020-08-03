@@ -2,26 +2,37 @@ import java.awt.Color;
 import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 class Display extends Frame {
 	private static final long serialVersionUID = 1L;
+	public static final Display instance = new Display();
 	
 	static int drawScale;
-	static boolean drawEyeRays = false;
+	static boolean drawCellVision = false;
 	static boolean drawFollowHighlight = false;
 	
-	static Color bgColor_summer = new Color(180, 180, 180);
-	static Color bgColor_winter = new Color(128, 128, 128);
-	static Color bgColor = Color.gray;
-	
+	static Color bgColor_summer = new Color(126, 126, 126);
+	static Color bgColor_winter = new Color(102, 102, 102);
 	
 	static boolean drawAll = false;
-	static int viewX = 0, viewY = 0;
+	static int viewX, viewY;
 	static int tileSize = 10;
 	static int viewRadiusInTiles = 48;
 	
+	public static void move(Direction direction) {
+		Point newLocation = new Point(direction.getVector());
+		newLocation.x += viewX;
+		newLocation.y += viewY;
+		ArtificialLife.wrapPoint(newLocation);
+		viewX = newLocation.x;
+		viewY = newLocation.y;
+		
+		// Deselect the selected cell when we move the view. //
+		ArtificialLife.selectedCell = null;
+	}
 	
 	Display(){
 		setTitle("Artificial Life Sim");
@@ -43,7 +54,7 @@ class Display extends Frame {
 		g.translate(insets.left, insets.top);
 		
 		// Draw background //
-		g.setColor(bgColor);
+		g.setColor(ArtificialLife.isSummer ? bgColor_summer : bgColor_winter);
 		g.fillRect(0, 0, getWidth(), getHeight());
 		
 		if(drawAll) { // If in map-mode, draw the whole map. //
@@ -65,7 +76,7 @@ class Display extends Frame {
 				if(drawFollowHighlight){
 					g.drawLine(0, 0, drawScale*cell.location.x, drawScale*cell.location.y);
 				}
-				if(drawEyeRays){
+				if(drawCellVision){
 					cell.drawSenses(g);
 				}
 			}

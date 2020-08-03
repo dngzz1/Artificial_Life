@@ -6,6 +6,10 @@ class Wall extends WorldObject {
 	boolean isDisplaceable;
 	boolean isMovable;
 	
+	Wall(){
+		color = Color.BLACK;
+	}
+	
 	Wall(boolean isDisplacable, boolean isMovable, Color color){
 		this.isDisplaceable = isDisplacable;
 		this.isMovable = isMovable;
@@ -15,6 +19,17 @@ class Wall extends WorldObject {
 	@Override
 	public Color getColor() {
 		return color;
+	}
+
+	@Override
+	public String getDisplayName() {
+		return "Wall";
+	}
+
+	@Override
+	public String getInfo() {
+		String info = "";
+		return info;
 	}
 
 	@Override

@@ -38,13 +38,17 @@ abstract class WorldObject {
 		}
 	}
 	
-	public abstract Color getColor();
-	
 	public Point getAdjacentLocation(Direction direction) {
 		Point adjacentLocation = M.add(direction.getVector(), getLocation());
 		ArtificialLife.wrapPoint(adjacentLocation);
 		return adjacentLocation;
 	}
+	
+	public abstract Color getColor();
+	
+	public abstract String getDisplayName();
+	
+	public abstract String getInfo();
 	
 	public Point getLocation() {
 		return new Point(location);
@@ -61,7 +65,7 @@ abstract class WorldObject {
 	public abstract boolean interact(WorldObject interacter, Interaction interactionType, Object data);
 	
 	public void remove() {
-		ArtificialLife.grid[location.x][location.y] = null;
+		ArtificialLife.remove(this);
 	}
 	
 	public void setLocation(Point p) {

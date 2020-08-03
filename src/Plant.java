@@ -23,6 +23,16 @@ class Plant extends WorldObject implements Stepable {
 	public Color getColor() {
 		return isFruiting() ? fruitingCol : idleCol;
 	}
+
+	@Override
+	public String getDisplayName() {
+		return "Plant";
+	}
+
+	@Override
+	public String getInfo() {
+		return "Fruits in: "+(fruitsInSummer ? "summer" : "winter");
+	}
 	
 	@Override
 	public int getStepsToNextTurn() {
@@ -85,6 +95,19 @@ class Plant_Fruit extends WorldObject {
 	public Color getColor() {
 		return hasFruit() ? color_hasFruit : color;
 	}
+
+	@Override
+	public String getDisplayName() {
+		return "Fruiting Plant";
+	}
+
+	@Override
+	public String getInfo() {
+		String info = "";
+		info += "Fruits every: "+stepsToBearFruit+" steps"+"<br>";
+		info += "Has fruit: "+(hasFruit() ? "yes" : "no")+"<br>";
+		return info;
+	}
 	
 	private boolean hasFruit() {
 		return (ArtificialLife.stepCounter >= lastPicked + stepsToBearFruit);
@@ -121,6 +144,18 @@ class Plant_Tuber extends WorldObject implements Stepable {
 	public Color getColor() {
 		return color;
 	}
+
+	@Override
+	public String getDisplayName() {
+		return "Tuber Producing Plant";
+	}
+
+	@Override
+	public String getInfo() {
+		String info = "";
+		info += "Produces every: "+stepsToBearFruit+" steps"+"<br>";
+		return info;
+	}
 	
 	@Override
 	public int getStepsToNextTurn() {
@@ -147,6 +182,16 @@ class Tuber extends WorldObject {
 	@Override
 	public Color getColor() {
 		return color;
+	}
+
+	@Override
+	public String getDisplayName() {
+		return "Tuber";
+	}
+
+	@Override
+	public String getInfo() {
+		return "";
 	}
 
 	@Override

@@ -35,7 +35,7 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 	static Color neuronColor_firing = Color.white;
 	static Color[] neuronColorList = neuronColorList(100);
 	
-	static GraphCell loadedCell = null;
+//	static GraphCell loadedCell = null;
 	static LinkedList<NeuronVertex> neuronVertexList;
 	static NeuronVertex selectedVertex = null;
 	static int pointSize = 4;
@@ -52,18 +52,18 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 		g.setColor(backgroundColor);
 		g.fillRect(0, 0, panelBounds.width, panelBounds.height);
 		
-		if(loadedCell != null){
-			Color neuronColor;
-			for(NeuronVertex nv : neuronVertexList){
-				neuronColor = neuronColor((nv.neuron.isFiring) ? nv.neuron.firingStrength : 1.0f);
-				g.setColor(neuronColor);
-				drawVertex(nv, g);
-				for(NeuronVertex connectedNeuron : nv.connectionList){
-					g.setColor(neuronColor);
-					drawArrow(nv, connectedNeuron, g);
-				}
-			}
-		}
+//		if(loadedCell != null){
+//			Color neuronColor;
+//			for(NeuronVertex nv : neuronVertexList){
+//				neuronColor = neuronColor((nv.neuron.isFiring) ? nv.neuron.firingStrength : 1.0f);
+//				g.setColor(neuronColor);
+//				drawVertex(nv, g);
+//				for(NeuronVertex connectedNeuron : nv.connectionList){
+//					g.setColor(neuronColor);
+//					drawArrow(nv, connectedNeuron, g);
+//				}
+//			}
+//		}
 	}
 	
 	private static void drawArrow(NeuronVertex vertex1, NeuronVertex vertex2, Graphics2D g){
@@ -99,11 +99,6 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 		char thresholdRelation = vertex.neuron.isThresholdUpperLimit ? '<' : '>';
 		Util.drawStringCenteredXY(thresholdRelation+""+vertex.neuron.threshold, vertex.x, vertex.y + 3*vertexLabelOffset, g);
 		Util.drawStringCenteredXY(vertex.neuron.firingStrength+"-->", vertex.x, vertex.y + 4*vertexLabelOffset, g);
-	}
-	
-	public static void main(String[] args) {
-		Organ.setup();
-		new NeuralNetworkViewer();
 	}
 	
 	private static Color neuronColor(float firingStrength){
@@ -166,51 +161,19 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 	}
 	
 	public void loadCell(Cell cell){
-		if(cell instanceof GraphCell) {
-			loadCell((GraphCell)cell);
-		} else {
-			System.err.println("NEURAL NETWORK VIEWER CURRENTLY ONLY WORKS FOR GRAPH-TYPE CELLS");
-		}
-	}
-	
-	public void loadCell(GraphCell cell){
-		loadedCell = cell;
-		neuronVertexList = new LinkedList<NeuronVertex>();
-		
-		// Neurons //
-		int motorNeuronCount = loadedCell.motorNeuronList.size();
-		int sensoryNeuronCount = loadedCell.sensoryNeuronList.size();
-		int i = 0, m = 0, s = 0;
-		for(Neuron neuron : loadedCell.neuronList){
-			NeuronVertex vertex = new NeuronVertex(neuron);
-			if(loadedCell.motorNeuronList.contains(neuron)){
-				vertex.setLocation(panel.getWidth() - 50, 50 + m*(panel.getHeight() - 100)/motorNeuronCount);
-				m ++;
-			} else if(loadedCell.sensoryNeuronList.contains(neuron)){
-				vertex.setLocation(50, 50 + s*(panel.getHeight() - 100)/sensoryNeuronCount);
-				s ++;
-			} else {
-				vertex.setLocation(M.randInt(100, panel.getWidth() - 100), M.randInt(50, panel.getHeight() - 50));
-			}
-			neuronVertexList.add(vertex);
-			vertex.setLabel(i);
-			i ++;
-		}
-		
-		
-		
-		// Connections //
-		for(NeuronVertex nv : neuronVertexList){
-			nv.setConnections();
-		}
+//		if(cell instanceof GraphCell) {
+//			loadCell((GraphCell)cell);
+//		} else {
+//			System.err.println("NEURAL NETWORK VIEWER CURRENTLY ONLY WORKS FOR GRAPH-TYPE CELLS");
+//		}
 	}
 	
 	private void loadFile(File file){
-		if(file != null){
-			frame.setTitle(windowTitle+" - "+file.getPath());
-			LinkedList<String> lineList = TextFileHandler.readEntireFile(file.getPath());
-			loadCell(new GraphCell(lineList));
-		}
+//		if(file != null){
+//			frame.setTitle(windowTitle+" - "+file.getPath());
+//			LinkedList<String> lineList = TextFileHandler.readEntireFile(file.getPath());
+//			loadCell(new GraphCell(lineList));
+//		}
 	}
 	
 	public void mouseClicked(MouseEvent e) {
@@ -226,21 +189,21 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 	}
 	
 	public void mousePressed(MouseEvent e) {
-		Point mousePosition = getMousePosition();
-		if(loadedCell != null && selectedVertex == null && mousePosition != null){
-			double smallestDistance = Double.MAX_VALUE;
-			NeuronVertex closestVertex = null;
-			for(NeuronVertex nv : neuronVertexList){
-				double distance = mousePosition.distance(nv.x, nv.y);
-				if(distance < smallestDistance){
-					smallestDistance = distance;
-					closestVertex = nv;
-				}
-			}
-			if(smallestDistance < selectionDistance){
-				clickVertex(closestVertex, e);
-			}
-		}
+//		Point mousePosition = getMousePosition();
+//		if(loadedCell != null && selectedVertex == null && mousePosition != null){
+//			double smallestDistance = Double.MAX_VALUE;
+//			NeuronVertex closestVertex = null;
+//			for(NeuronVertex nv : neuronVertexList){
+//				double distance = mousePosition.distance(nv.x, nv.y);
+//				if(distance < smallestDistance){
+//					smallestDistance = distance;
+//					closestVertex = nv;
+//				}
+//			}
+//			if(smallestDistance < selectionDistance){
+//				clickVertex(closestVertex, e);
+//			}
+//		}
 	}
 	
 	public void mouseReleased(MouseEvent e) {
@@ -288,14 +251,14 @@ class NeuralNetworkViewer implements Runnable, ActionListener, MouseListener {
 		}
 		
 		void setLabel(int index){
-			for(Organ organ : loadedCell.organList){
-				String organLabel = organ.getLabel(neuron);
-				if(!organLabel.equals("")){
-					label = organLabel+":"+organ;
-					return;
-				}
-			}
-			label = "N"+index;
+//			for(Organ organ : loadedCell.organList){
+//				String organLabel = organ.getLabel(neuron);
+//				if(!organLabel.equals("")){
+//					label = organLabel+":"+organ;
+//					return;
+//				}
+//			}
+//			label = "N"+index;
 		}
 		
 		void setLocation(int x, int y){

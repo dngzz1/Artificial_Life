@@ -7,6 +7,16 @@ class Creator extends WorldObject implements Stepable {
 	public Color getColor() {
 		return color;
 	}
+
+	@Override
+	public String getDisplayName() {
+		return "Creator";
+	}
+
+	@Override
+	public String getInfo() {
+		return "";
+	}
 	
 	@Override
 	public int getStepsToNextTurn() {

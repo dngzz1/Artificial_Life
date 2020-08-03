@@ -8,6 +8,16 @@ class Food extends WorldObject {
 	public Color getColor() {
 		return color;
 	}
+
+	@Override
+	public String getDisplayName() {
+		return "Food";
+	}
+
+	@Override
+	public String getInfo() {
+		return "Energy: "+getFoodValue();
+	}
 	
 	public int getFoodValue(){
 		return energyGainPerFood;

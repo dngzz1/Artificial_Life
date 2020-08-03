@@ -7,6 +7,17 @@ class Hazard extends WorldObject {
 	public Color getColor() {
 		return color;
 	}
+
+	@Override
+	public String getDisplayName() {
+		return "Hazard";
+	}
+
+	@Override
+	public String getInfo() {
+		return "";
+	}
+	
 	@Override
 	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {

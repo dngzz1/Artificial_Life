@@ -207,6 +207,27 @@ class MatrixCell extends Cell {
 	public Color getColor() {
 		return validCellColors[col];
 	}
+
+	@Override
+	public String getDisplayName() {
+		return toString();
+	}
+
+	@Override
+	public String getInfo() {
+		String info = "";
+		info += "species = "+species.getDisplayName()+"<br>";
+		info += "generation = "+generation+"<br>";
+		info += "size = "+size+"<br>"; 
+		info += "speed = "+speed+"<br>"; 
+		info += "energy = "+energy+"<br>";
+		info += "lifetime = "+lifetime+"<br>";
+		info += "food eaten = "+lifetimeFoodEaten+"<br>"; 
+		info += "number of children = "+children+"<br>"; 
+		info += "# memory neurons = "+memoryNeurons.length+"<br>"; 
+		info += "# concept neurons = "+conceptNeurons.length+"<br>"; 
+		return info;
+	}
 	
 	private void initialiseNeuralNetworkCloningParent(MatrixCell parent) {
 		sensoryConceptConnections = M.cloneMatrix(parent.sensoryConceptConnections);
@@ -478,8 +499,8 @@ class MatrixCell extends Cell {
 	private void setupNeuralNetwork() {
 		// Neurons //
 		sensoryNeurons = new double[14];
-		memoryNeurons = new double[species.memoryNeuronCount()];
-		conceptNeurons = new double[species.conceptNeuronCount()];
+		memoryNeurons = new double[species.neuronCount_memory()];
+		conceptNeurons = new double[species.neuronCount_concept()];
 		motorNeurons = new double[11];
 		
 		// Connection layer 1 //
