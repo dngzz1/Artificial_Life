@@ -17,6 +17,10 @@ class Controls implements KeyListener {
 	public static boolean spawnNewCells = true;
 	public static boolean stepSimulationOnce = false;
 	
+	
+	///XXX///
+	public static boolean trackPredation = false;
+	
 	public static void setSpeed(int speedSetting) {
 		switch (speedSetting) {
 		case -1:
@@ -38,6 +42,7 @@ class Controls implements KeyListener {
 	}
 	
 	public static void setup() {
+		Control.DEBUG1.setTrigger(KeyEvent.VK_F1, false, false);
 		Control.DOORS_CLOSE.setTrigger(KeyEvent.VK_D, true, false);
 		Control.DOORS_CLOSE_FORCIBLY.setTrigger(KeyEvent.VK_D, true, true);
 		Control.DOORS_OPEN.setTrigger(KeyEvent.VK_D);
@@ -76,6 +81,11 @@ class Controls implements KeyListener {
 	public static void step() {
 		for(Control control : Control.getPressedControls()) {
 			switch (control) {
+			case DEBUG1:
+				trackPredation = !trackPredation;
+				System.out.println("trackPredation="+trackPredation);
+				control.consume();
+				break;
 			case DOORS_CLOSE:
 				Door.closeAll(false);
 				control.consume();
@@ -249,6 +259,7 @@ class Controls implements KeyListener {
 }
 
 enum Control {
+	DEBUG1,
 	DOORS_CLOSE, DOORS_CLOSE_FORCIBLY, DOORS_OPEN,
 	DRAW_CELL_VISION, FOLLOW_CELL, LOAD_FILE, PAUSE,
 	PLACEMODE_PLACE_FOOD, PLACEMODE_PLACE_HAZARD, PLACEMODE_PLACE_WALL, PLACEMODE_REMOVE_OBJECT,

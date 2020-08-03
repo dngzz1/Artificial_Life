@@ -4,7 +4,7 @@
 fpsCap=30
 // Maximum frames per second when not in accelerated mode.
 
-map=map7.png
+map=mapX.png
 // The map to use. The image dimensions give the size of the world. Objects are placed in the world according to pixel color.
 
 drawScale=3
@@ -13,11 +13,44 @@ drawScale=3
 minCellCount=100
 // New generation 0 cells are placed into the world whenever the population is below this number.
 
-energyGainPerFood=5000
-// The amount of energy gained when a cell eats food.
+defaultAttackStrength=1
+// The amount of hp that generation zero cells attacks remove.
 
-maxStoredEnergyMultiplier=5000
-// The maximum amount of energy a cell can store per unit size.
+defaultBiteSize=5000
+// The amount of energy a generation zero cell can consume each step.
+
+defaultBuildStrength=1
+// The amount of hp walls created by generation zero cells have.
+
+defaultEnergyStoreSize=100000
+// The amount of energy generation zero cells can store.
+
+defaultHP=1
+// The amount of hp generation zero cells have.
+
+energyGainPerFood=5000
+// The amount of energy food objects contain.
+
+baseEnergyCost=10
+// The base amount of energy used by a cell each step.
+
+energyCostMultiplier_attackStrength=1.0
+// The additional energy used by a cell each step per unit of attack strength.
+
+energyCostMultiplier_biteSize=0.001
+// The additional energy used by a cell each step per unit of bite size.
+
+energyCostMultiplier_buildStrength=1.0
+// The additional energy used by a cell each step per unit of build strength.
+
+energyCostMultiplier_energyStoreSize=0.0001
+// The additional energy used by a cell each step per unit of energy storage.
+
+energyCostMultiplier_hpMax=1.0
+// The additional energy used by a cell each step per unit of hp.
+
+energyCostMultiplier_speed=100.0
+// The additional energy used by a cell each step if moving at maximum speed.
 
 birthEnergyRequirement=1000
 // The amount of energy used when a cell produces a child (in addition to energy transferred to the child).

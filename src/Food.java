@@ -1,8 +1,18 @@
 import java.awt.Color;
 
 class Food extends WorldObject {
-	static int energyGainPerFood;
+	static int defaultFoodEnergy;
 	static Color color = Color.white;
+	
+	int energy;
+	
+	Food(int energy){
+		this.energy = energy;
+	}
+	
+	Food(){
+		this(defaultFoodEnergy);
+	}
 
 	@Override
 	public Color getColor() {
@@ -16,11 +26,7 @@ class Food extends WorldObject {
 
 	@Override
 	public String getInfo() {
-		return "Energy: "+getFoodValue();
-	}
-	
-	public int getFoodValue(){
-		return energyGainPerFood;
+		return "Energy: "+energy;
 	}
 
 	@Override
@@ -29,8 +35,14 @@ class Food extends WorldObject {
 		case DISPLACE:
 			return displace(interacter, this);
 		case EAT:
-			interacter.interact(this, Interaction.GIVE_ENERGY, Integer.valueOf(energyGainPerFood));
-			remove();
+			int amountEaten = (Integer)data;
+			if(amountEaten >= energy) {
+				interacter.interact(this, Interaction.GIVE_ENERGY, Integer.valueOf(energy));
+				remove();
+			} else {
+				interacter.interact(this, Interaction.GIVE_ENERGY, Integer.valueOf(amountEaten));
+				energy -= amountEaten;
+			}
 			return true;
 		case PULL:
 			return pull(interacter, this);

@@ -53,12 +53,13 @@ class InfoWindow extends JFrame {
 	private static String infoText_general() {
 		String infoText = "<html>";
 		if(!Controls.isGameRunning) {
-			infoText += "Step Counter = "+ArtificialLife.stepCounter+" (PAUSED)"+"<br>";
+			infoText += "Sim speed = PAUSED"+"<br>";
 		} else if(Controls.isFramerateCapped) {
-			infoText += "Step Counter = "+ArtificialLife.stepCounter+" x"+Controls.stepsPerDraw+" (CAPPED)"+"<br>";
+			infoText += "Sim speed = "+Controls.stepsPerDraw+"x (CAPPED)"+"<br>";
 		} else {
-			infoText += "Step Counter = "+ArtificialLife.stepCounter+" x"+Controls.stepsPerDraw+" (UNCAPPED)"+"<br>";
+			infoText += "Sim speed = "+Controls.stepsPerDraw+"x (UNCAPPED)"+"<br>";
 		}
+		infoText += "Step Counter = "+ArtificialLife.stepCounter+"<br>";
 		infoText += "Season = "+(ArtificialLife.isSummer ? "Summer" : "Winter")+"<br>";
 		infoText += "Number of cells = "+ArtificialLife.getCellCount()+"<br>";
 		infoText += "spawning = "+(Controls.spawnNewCells ? "ON" : "OFF")+"<br>";
@@ -67,7 +68,7 @@ class InfoWindow extends JFrame {
 		infoText += "Latest generation = "+latestGeneration+" with "+generationCellCount(latestGeneration)+" cells."+"<br>";
 		infoText += "Oldest generation = "+oldestGeneration+" with "+generationCellCount(oldestGeneration)+" cells."+"<br>";
 		infoText += "Total children = "+ArtificialLife.totalChildren+"<br>";
-		infoText += "Total children with two parents = "+ArtificialLife.totalChildrenWithTwoParents+"<br>";
+		infoText += "Total 2-parent children = "+ArtificialLife.totalChildrenWithTwoParents+"<br>";
 		for(CauseOfDeath causeOfDeath : CauseOfDeath.values()) {
 			infoText += "Total deaths by "+causeOfDeath.name().toLowerCase()+" = "+ArtificialLife.totalDeathsBy[causeOfDeath.ordinal()]+"<br>";
 		}

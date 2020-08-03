@@ -25,7 +25,7 @@ class ArtificialLife implements Runnable {
 	
 	static TurnList turnList = new TurnList();
 	
-	static int stepCounter;
+	static int stepCounter = 0;
 	static int totalChildren = 0;
 	static int totalChildrenWithTwoParents = 0;
 	static int totalDeathsBy[] = new int[CauseOfDeath.values().length];
@@ -81,7 +81,7 @@ class ArtificialLife implements Runnable {
 			int i = 0;
 			for(Stepable stepable : getStepList()){
 				if(stepable instanceof Cell){
-					cellSizeList[i] = ((Cell)stepable).size;
+					cellSizeList[i] = ((Cell)stepable).energyStoreSize;
 					i ++;
 				}
 			}
@@ -153,7 +153,7 @@ class ArtificialLife implements Runnable {
 		int i = 0;
 		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
-				cellSizeList[i] = ((Cell)stepable).size;
+				cellSizeList[i] = ((Cell)stepable).energyStoreSize;
 				i ++;
 			}
 		}
@@ -426,11 +426,44 @@ class ArtificialLife implements Runnable {
 				if(line.startsWith("drawScale=")){
 					Display.drawScale = Integer.parseInt(line.substring(dataIndex));
 				}
-				if(line.startsWith("energyGainPerFood=")){
-					Food.energyGainPerFood = Integer.parseInt(line.substring(dataIndex));
+				if(line.startsWith("defaultAttackStrength=")){
+					Cell.defaultAttackStrength = Integer.parseInt(line.substring(dataIndex));
 				}
-				if(line.startsWith("maxStoredEnergyMultiplier=")){
-					Cell.maxStoredEnergyMultiplier = Integer.parseInt(line.substring(dataIndex));
+				if(line.startsWith("defaultBiteSize=")){
+					Cell.defaultBiteSize = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("defaultBuildStrength=")){
+					Cell.defaultBuildStrength = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("defaultEnergyStoreSize=")){
+					Cell.defaultEnergyStoreSize = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("defaultHP=")){
+					Cell.defaultHP = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyGainPerFood=")){
+					Food.defaultFoodEnergy = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("baseEnergyCost=")){
+					Cell.baseEnergyCost = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_attackStrength=")){
+					Cell.energyCostMultiplier_attackStrength = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_biteSize=")){
+					Cell.energyCostMultiplier_biteSize = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_buildStrength=")){
+					Cell.energyCostMultiplier_buildStrength = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_energyStoreSize=")){
+					Cell.energyCostMultiplier_energyStoreSize = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_hpMax=")){
+					Cell.energyCostMultiplier_hpMax = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_speed=")){
+					Cell.energyCostMultiplier_speed = Double.parseDouble(line.substring(dataIndex));
 				}
 				if(line.startsWith("birthEnergyRequirement=")){
 					Cell.birthEnergyRequirement = Integer.parseInt(line.substring(dataIndex));
@@ -474,18 +507,34 @@ class ArtificialLife implements Runnable {
 		Display.viewY = height/2;
 	}
 	
+	private static void spawnNewCells() {
+		int cellCount = getCellCount();
+		int failedPlaceAttempts = 0;
+		int maxFailedPlaceAttempts = 100;
+		while(cellCount < minCellCount) {
+			boolean placedSuccessfully = placeRandomly(new MatrixCell());
+			if(placedSuccessfully) {
+				cellCount ++;
+			} else {
+				failedPlaceAttempts ++;
+				if(failedPlaceAttempts > maxFailedPlaceAttempts) {
+					break;
+				}
+			}
+		}
+	}
+	
 	public static void step(){
 		// Step the things that need to. //
 		turnList.step();
 		
 		// Spawn new cells if the population is too low. //
-		int cellCount = getCellCount();
-		if(Controls.spawnNewCells && cellCount < minCellCount){
-			placeRandomly(new MatrixCell());
+		if(Controls.spawnNewCells) {
+			spawnNewCells();
 		}
 		
 		// Pause simulation if there has been an extinction. //
-		if(!Controls.spawnNewCells && cellCount == 0) {
+		if(!Controls.spawnNewCells && getCellCount() == 0) {
 			Controls.setSpeed(Controls.SPEED_SETTING[0]);
 		}
 		
