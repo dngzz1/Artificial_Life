@@ -4,7 +4,7 @@
 fpsCap=30
 // Maximum frames per second when not in accelerated mode.
 
-map=map8F.png
+map=map10.png
 // The map to use. The image dimensions give the size of the world. Objects are placed in the world according to pixel color.
 
 drawScale=3
