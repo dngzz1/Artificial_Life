@@ -23,14 +23,14 @@ defaultBiteSize=5000
 defaultBuildStrength=1
 // The amount of hp walls created by generation zero cells have.
 
-defaultEnergyStoreSize=100000
+defaultEnergyStoreSize=800000
 // The amount of energy generation zero cells can store.
 
 defaultHP=1
 // The amount of hp generation zero cells have.
 
-energyGainPerFood=5000
-// The amount of energy food objects contain.
+energyGainPerFood=50000
+// The amount of energy food objects contain. Used to be 5000
 
 baseEnergyCost=10
 // The base amount of energy used by a cell each step.
@@ -38,8 +38,8 @@ baseEnergyCost=10
 energyCostMultiplier_attackStrength=1.0
 // The additional energy used by a cell each step per unit of attack strength.
 
-energyCostMultiplier_biteSize=0.001
-// The additional energy used by a cell each step per unit of bite size.
+energyCostMultiplier_biteSize=0.01
+// The additional energy used by a cell each step per unit of bite size. Default: 0.001
 
 energyCostMultiplier_buildStrength=1.0
 // The additional energy used by a cell each step per unit of build strength.
@@ -53,8 +53,8 @@ energyCostMultiplier_hpMax=1.0
 energyCostMultiplier_speed=100.0
 // The additional energy used by a cell each step if moving at maximum speed.
 
-birthEnergyRequirement=1000
-// The amount of energy used when a cell produces a child (in addition to energy transferred to the child).
+birthEnergyRequirement=10000
+// The amount of energy used when a cell produces a child (in addition to energy transferred to the child). Default: 1000
 
 energyUponBirth=20000
-// The amount of energy a generation 0 cell starts with.
+// The amount of energy a generation 0 cell starts with. Default: 20000

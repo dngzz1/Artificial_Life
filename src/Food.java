@@ -33,7 +33,7 @@ class Food extends WorldObject {
 	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
 		case DISPLACE:
-			return displace(interacter, this);
+			return false;//displace(interacter, this);
 		case EAT:
 			int amountEaten = (Integer)data;
 			if(amountEaten >= energy) {
@@ -47,7 +47,7 @@ class Food extends WorldObject {
 		case PULL:
 			return pull(interacter, this);
 		case PUSH:
-			return push(interacter, this);
+			return false;//push(interacter, this);
 		default:
 			return false;
 		}
