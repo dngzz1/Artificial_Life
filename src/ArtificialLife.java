@@ -1,7 +1,5 @@
 import java.awt.Color;
 import java.awt.Point;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.PrintWriter;
@@ -15,8 +13,7 @@ import files.ImageHandler;
 import files.TextFileHandler;
 import maths.M;
 
-class ArtificialLife implements Runnable, KeyListener {
-	private static Display display;
+class ArtificialLife implements Runnable {
 	private static InfoWindow infoWindow;
 	static NeuralNetworkViewer neuralNetworkViewer;
 	
@@ -24,14 +21,11 @@ class ArtificialLife implements Runnable, KeyListener {
 	static int width, height;
 	static int minCellCount;
 	
-	private static int stepsPerDraw_acceleratedMode = 10000;
-	
 	static WorldObject[][] grid = new WorldObject[width][height];
 	
 	static TurnList turnList = new TurnList();
 	
-	static boolean isRunning;
-	static int stepCounter;
+	static int stepCounter = 0;
 	static int totalChildren = 0;
 	static int totalChildrenWithTwoParents = 0;
 	static int totalDeathsBy[] = new int[CauseOfDeath.values().length];
@@ -41,17 +35,6 @@ class ArtificialLife implements Runnable, KeyListener {
 	// Seasons //
 	static int seasonDuration = 1000;
 	static boolean isSummer = true;
-	
-	// Controls //
-	static final short SIM_SPEED_PAUSED = 0, SIM_SPEED_STANDARD = 1, SIM_SPEED_ACCELERATED = 2, SIM_SPEED_SUPERFAST = 3;
-	static short simulationSpeed = SIM_SPEED_STANDARD;
-	static boolean isAcceleratedModeOn = false;
-	static boolean isDisplayOn = true;
-	static boolean loadFile = false;
-	static boolean printLog = false;
-	static boolean step = false;
-	static boolean spawnNewCells = true;
-	static boolean inPlaceMode = false;
 	
 	// Auto-test variables //
 	static boolean isAutotesting = false;
@@ -85,8 +68,7 @@ class ArtificialLife implements Runnable, KeyListener {
 		// Begin simulation //
 		isAutotesting = true;
 		simulationNumber = 1;
-		isAcceleratedModeOn = true;
-		isDisplayOn = false;
+		Controls.setSpeed(Controls.SPEED_SETTING[9]);
 		new ArtificialLife().start();
 	}
 	
@@ -99,7 +81,7 @@ class ArtificialLife implements Runnable, KeyListener {
 			int i = 0;
 			for(Stepable stepable : getStepList()){
 				if(stepable instanceof Cell){
-					cellSizeList[i] = ((Cell)stepable).size;
+					cellSizeList[i] = ((Cell)stepable).energyStoreSize;
 					i ++;
 				}
 			}
@@ -171,7 +153,7 @@ class ArtificialLife implements Runnable, KeyListener {
 		int i = 0;
 		for(Stepable stepable : getStepList()){
 			if(stepable instanceof Cell){
-				cellSizeList[i] = ((Cell)stepable).size;
+				cellSizeList[i] = ((Cell)stepable).energyStoreSize;
 				i ++;
 			}
 		}
@@ -256,7 +238,7 @@ class ArtificialLife implements Runnable, KeyListener {
 		return turnList.getStepList();
 	}
 	
-	private static void loadFile() {
+	public static void loadFile() {
 		int choice = JOptionPane.showOptionDialog(null, "Load one cell or whole population?", "load", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[]{"one cell", "population"}, null); 
 		
 		if(choice == 0){
@@ -296,9 +278,7 @@ class ArtificialLife implements Runnable, KeyListener {
 			LinkedList<String> lineList = TextFileHandler.readEntireFile(file.getPath());
 			String cellType = lineList.remove();
 			WorldObject loadedCell = null;
-			if(cellType.startsWith("Cell #")) {
-				loadedCell = new GraphCell(lineList);
-			} else if(cellType.startsWith("Cell2 #")) {
+			if(cellType.startsWith("Cell2 #")) {
 				loadedCell = new MatrixCell(lineList);
 			}
 			if(loadedCell != null) {
@@ -324,8 +304,8 @@ class ArtificialLife implements Runnable, KeyListener {
 			return;
 		}
 		
-		Organ.setup();
 		ArtificialLife.setup();
+		Controls.setup();
 		
 		// Auto-testing //
 		if(doAutotest) {
@@ -370,23 +350,6 @@ class ArtificialLife implements Runnable, KeyListener {
 		int bestCell_oldest = 0;
 		int i = 0;
 		for(Stepable stepable : getStepList()){
-			if(stepable instanceof GraphCell){
-				GraphCell cell = (GraphCell)stepable;
-				cell.printToFile(filename+"/cell"+i+".txt");
-				if(cell.lifetimeFoodEaten > mostFoodEaten){
-					bestCell_foodEaten = i;
-					mostFoodEaten = cell.lifetimeFoodEaten;
-				}
-				if(cell.children > mostChildren){
-					bestCell_children = i;
-					mostChildren = cell.children;
-				}
-				if(cell.lifetime > longestLife){
-					bestCell_oldest = i;
-					longestLife = cell.lifetime;
-				}
-				i ++;
-			}
 			if(stepable instanceof MatrixCell){
 				MatrixCell cell = (MatrixCell)stepable;
 				cell.printToFile(filename+"/cell"+i+".txt");
@@ -420,40 +383,31 @@ class ArtificialLife implements Runnable, KeyListener {
 		ArtificialLife.grid[object.location.x][object.location.y] = null;
 	}
 	
-	public void select(WorldObject selection) {
+	public static void removeObjectAt(Point location) {
+		WorldObject object = getObjectAt(location);
+		if(object != null) {
+			object.remove();
+		}
+	}
+	
+	public static void removeObjectAtCursor() {
+		WorldObject object = getObjectAtCursor();
+		if(object != null)
+			object.remove();
+	}
+	
+	public static void select(WorldObject selection) {
 		if(selection instanceof Cell) {
 			selectedCell = (Cell)selection;
 		}
 	}
 	
-	public static void setSimulationSpeed(short simSpeed) {
-		switch (simSpeed) {
-		case SIM_SPEED_PAUSED:
-			isRunning = false;
-			isAcceleratedModeOn = false;
-			isDisplayOn = true;
-			break;
-		case SIM_SPEED_STANDARD:
-			isRunning = true;
-			isAcceleratedModeOn = false;
-			isDisplayOn = true;
-			break;
-		case SIM_SPEED_ACCELERATED:
-			isRunning = true;
-			isAcceleratedModeOn = true;
-			isDisplayOn = true;
-			break;
-		case SIM_SPEED_SUPERFAST:
-			isRunning = true;
-			isAcceleratedModeOn = true;
-			isDisplayOn = false;
-			break;
-		default:
-			throw new RuntimeException("Invalid simulation speed");
-		}
+	public static void selectHoveredObject() {
+		select(getObjectAt(Display.viewX, Display.viewY));
 	}
 	
 	public static void setup(){
+		// Load parameters from the init file. //
 		LinkedList<String> initData = TextFileHandler.readEntireFile("data/init.txt");
 		String mapFilename = null;
 		for(String line : initData){
@@ -472,17 +426,44 @@ class ArtificialLife implements Runnable, KeyListener {
 				if(line.startsWith("drawScale=")){
 					Display.drawScale = Integer.parseInt(line.substring(dataIndex));
 				}
-				if(line.startsWith("initialMutations=")){
-					GraphCell.initialMutations = Integer.parseInt(line.substring(dataIndex));
+				if(line.startsWith("defaultAttackStrength=")){
+					Cell.defaultAttackStrength = Integer.parseInt(line.substring(dataIndex));
 				}
-				if(line.startsWith("maxMutations=")){
-					GraphCell.maxMutations = Integer.parseInt(line.substring(dataIndex));
+				if(line.startsWith("defaultBiteSize=")){
+					Cell.defaultBiteSize = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("defaultBuildStrength=")){
+					Cell.defaultBuildStrength = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("defaultEnergyStoreSize=")){
+					Cell.defaultEnergyStoreSize = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("defaultHP=")){
+					Cell.defaultHP = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("energyGainPerFood=")){
-					Food.energyGainPerFood = Integer.parseInt(line.substring(dataIndex));
+					Food.defaultFoodEnergy = Integer.parseInt(line.substring(dataIndex));
 				}
-				if(line.startsWith("maxStoredEnergyMultiplier=")){
-					Cell.maxStoredEnergyMultiplier = Integer.parseInt(line.substring(dataIndex));
+				if(line.startsWith("baseEnergyCost=")){
+					Cell.baseEnergyCost = Integer.parseInt(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_attackStrength=")){
+					Cell.energyCostMultiplier_attackStrength = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_biteSize=")){
+					Cell.energyCostMultiplier_biteSize = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_buildStrength=")){
+					Cell.energyCostMultiplier_buildStrength = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_energyStoreSize=")){
+					Cell.energyCostMultiplier_energyStoreSize = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_hpMax=")){
+					Cell.energyCostMultiplier_hpMax = Double.parseDouble(line.substring(dataIndex));
+				}
+				if(line.startsWith("energyCostMultiplier_speed=")){
+					Cell.energyCostMultiplier_speed = Double.parseDouble(line.substring(dataIndex));
 				}
 				if(line.startsWith("birthEnergyRequirement=")){
 					Cell.birthEnergyRequirement = Integer.parseInt(line.substring(dataIndex));
@@ -490,50 +471,10 @@ class ArtificialLife implements Runnable, KeyListener {
 				if(line.startsWith("energyUponBirth=")){
 					Cell.energyUponBirth = Integer.parseInt(line.substring(dataIndex));
 				}
-				if(line.startsWith("energyCostPerTick=")){
-					GraphCell.energyCostPerTick = Integer.parseInt(line.substring(dataIndex));
-				}
-				if(line.startsWith("energyCostPerNeuron=")){
-					GraphCell.energyCostPerNeuron = Integer.parseInt(line.substring(dataIndex));
-				}
-				if(line.startsWith("energyCostToRotate=")){
-					Organ_Interaction.energyCostToRotate = Integer.parseInt(line.substring(dataIndex));
-				}
-				if(line.startsWith("energyCostToMove=")){
-					Organ_Interaction.energyCostToMove = Integer.parseInt(line.substring(dataIndex));
-				}
-				if(line.startsWith("energyCostPerTileSeen=")){
-					Organ_Eye.energyCostPerTileSeen = Integer.parseInt(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_addConnection=")){
-					GraphCell.mutationChance_addConnection = Float.parseFloat(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_addNeuron=")){
-					GraphCell.mutationChance_addNeuron = Float.parseFloat(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_changeNeuronThreshold=")){
-					GraphCell.mutationChance_changeNeuronThreshold = Float.parseFloat(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_changeFiringStrength=")){
-					GraphCell.mutationChance_changeFiringStrength = Float.parseFloat(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_collapseConection=")){
-					GraphCell.mutationChance_collapseConection = Float.parseFloat(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_removeConnection=")){
-					GraphCell.mutationChance_removeConnection = Float.parseFloat(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_splitConnection=")){
-					GraphCell.mutationChance_splitConnection = Float.parseFloat(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_addOrgan=")){
-					GraphCell.mutationChance_addOrgan = Float.parseFloat(line.substring(dataIndex));
-				}
-				if(line.startsWith("mutationChance_removeOrgan=")){
-					GraphCell.mutationChance_removeOrgan = Float.parseFloat(line.substring(dataIndex));
-				}
 			}
 		}
+		
+		// Load the map. //
 		BufferedImage mapImage = ImageHandler.loadImage("data/"+mapFilename);
 		width = mapImage.getWidth();
 		height = mapImage.getHeight();
@@ -542,9 +483,7 @@ class ArtificialLife implements Runnable, KeyListener {
 			for(int y = 0; y < height; y ++){
 				int rgb = mapImage.getRGB(x, y);
 				if(rgb == Color.BLACK.getRGB()){
-					place(new Wall(false, true, Color.BLACK), x, y);
-				} else if(rgb == Color.BLUE.getRGB()){
-					place(new Wall(false, false, Color.BLUE), x, y);
+					place(new Wall(), x, y);
 				} else if(rgb == Color.RED.getRGB()){
 					place(new Hazard(), x, y);
 				} else if(rgb == Color.GREEN.getRGB()){
@@ -557,6 +496,29 @@ class ArtificialLife implements Runnable, KeyListener {
 					place(new Plant_Tuber(), x, y);
 				} else if(rgb == Color.MAGENTA.getRGB()){
 					place(new Creator(), x, y);
+				} else if(rgb == Door.color.getRGB()){
+					place(new Door(), x, y);
+				}
+			}
+		}
+		
+		// Center the display. //
+		Display.viewX = width/2;
+		Display.viewY = height/2;
+	}
+	
+	private static void spawnNewCells() {
+		int cellCount = getCellCount();
+		int failedPlaceAttempts = 0;
+		int maxFailedPlaceAttempts = 100;
+		while(cellCount < minCellCount) {
+			boolean placedSuccessfully = placeRandomly(new MatrixCell());
+			if(placedSuccessfully) {
+				cellCount ++;
+			} else {
+				failedPlaceAttempts ++;
+				if(failedPlaceAttempts > maxFailedPlaceAttempts) {
+					break;
 				}
 			}
 		}
@@ -567,16 +529,13 @@ class ArtificialLife implements Runnable, KeyListener {
 		turnList.step();
 		
 		// Spawn new cells if the population is too low. //
-		int cellCount = getCellCount();
-		if(spawnNewCells && cellCount < minCellCount){
-			placeRandomly(new MatrixCell());
+		if(Controls.spawnNewCells) {
+			spawnNewCells();
 		}
 		
 		// Pause simulation if there has been an extinction. //
-		if(!spawnNewCells && cellCount == 0) {
-			isRunning = false;
-			isAcceleratedModeOn = false;
-			isDisplayOn = true;
+		if(!Controls.spawnNewCells && getCellCount() == 0) {
+			Controls.setSpeed(Controls.SPEED_SETTING[0]);
 		}
 		
 		// Update the view location if we are following a cell. //
@@ -606,141 +565,28 @@ class ArtificialLife implements Runnable, KeyListener {
 	}
 	
 	private ArtificialLife(){
-		neuralNetworkViewer = new NeuralNetworkViewer();
-		display = new Display();
-		display.addKeyListener(this);
-		display.setVisible(true);
+//		neuralNetworkViewer = new NeuralNetworkViewer();
+		Display.instance.addKeyListener(Controls.instance);
+		Display.instance.setVisible(true);
 		infoWindow = new InfoWindow();
-		infoWindow.addKeyListener(this);
+		infoWindow.addKeyListener(Controls.instance);
 		infoWindow.setVisible(true);
-	}
-	
-	public void keyPressed(KeyEvent e) {
-		switch (e.getKeyCode()) {
-		case KeyEvent.VK_UP:
-			selectedCell = null;
-			Display.viewY = (Display.viewY + height - 1)%height;
-			break;
-		case KeyEvent.VK_DOWN:
-			selectedCell = null;
-			Display.viewY = (Display.viewY + 1)%height;
-			break;
-		case KeyEvent.VK_LEFT:
-			selectedCell = null;
-			Display.viewX = (Display.viewX + width - 1)%width;
-			break;
-		case KeyEvent.VK_RIGHT:
-			selectedCell = null;
-			Display.viewX = (Display.viewX + 1)%width;
-			break;
-		default:
-			break;
-		}
-	}
-	
-	public void keyReleased(KeyEvent e) {}
-	
-	public void keyTyped(KeyEvent e) {
-		if(!inPlaceMode) {
-			switch (e.getKeyChar()) {
-			case ' ':
-				if(isRunning) {
-					setSimulationSpeed(SIM_SPEED_PAUSED);
-				} else {
-					setSimulationSpeed(SIM_SPEED_STANDARD);
-				}
-				break;
-			case '1':
-				setSimulationSpeed(SIM_SPEED_STANDARD);
-				break;
-			case '2':
-				setSimulationSpeed(SIM_SPEED_ACCELERATED);
-				break;
-			case '3':
-				setSimulationSpeed(SIM_SPEED_SUPERFAST);
-				break;
-			case 'e':
-				Display.drawEyeRays = !Display.drawEyeRays;
-				break;
-			case 'f':
-				select(getObjectAt(Display.viewX, Display.viewY));
-				break;
-			case 'l':
-				loadFile = true;
-				break;
-			case 'm':
-				display.toggleDisplayMode();
-				break;
-			case 'n':
-				if(selectedCell != null){
-					neuralNetworkViewer.loadCell(selectedCell);
-				}
-				break;
-			case 'p':
-				printLog = true;
-				break;
-			case 's':
-				spawnNewCells = !spawnNewCells;
-				break;
-			case '.':
-				step = true;
-				break;
-			case '*':
-				Display.drawFollowHighlight = !Display.drawFollowHighlight;
-				break;
-			case 'q':
-				inPlaceMode = true;
-				
-				//			placeRandomly(new Cell2());
-
-				break;
-			case 'r':
-
-				getObjectAt(Display.viewX, Display.viewY).remove();
-
-				break;
-			default:
-				break;
-			}
-		} else {
-			switch (e.getKeyChar()) {
-			case 'f':
-				place(new Food(), Display.viewX, Display.viewY);
-				break;
-			case 'h':
-				place(new Hazard(), Display.viewX, Display.viewY);
-				break;
-			case 'w':
-				place(new Wall(false, false, Color.BLACK), Display.viewX, Display.viewY);
-				break;
-			case 'q':
-				inPlaceMode = false;
-				break;
-			}
-		}
 	}
 	
 	public void run() {
 		while(true){
-			if(isRunning){
+			Controls.step();
+			if(Controls.isGameRunning){
 				step();
-			} else if(step){
+			} else if(Controls.stepSimulationOnce){
 				step();
-				step = false;
+				Controls.stepSimulationOnce = false;
 			}
-			infoWindow.update();
-			if(isDisplayOn || stepCounter % stepsPerDraw_acceleratedMode == 0){
-				display.draw();
+			if(stepCounter % Controls.stepsPerDraw == 0){
+				Display.instance.draw();
+				infoWindow.update();
 			}
-			if(loadFile){
-				loadFile();
-				loadFile = false;
-			}
-			if(printLog){
-				printGenerationToFile();
-				printLog = false;
-			}
-			if(!isAcceleratedModeOn){
+			if(Controls.isFramerateCapped){
 				try{
 					Thread.sleep(1000/fpsCap);
 				} catch(InterruptedException e){
@@ -755,7 +601,7 @@ class ArtificialLife implements Runnable, KeyListener {
 	
 	public void start() {
 		stepCounter = 0;
-		isRunning = true;
+		Controls.isGameRunning = true;
 		new Thread(this).start();
 	}
 }

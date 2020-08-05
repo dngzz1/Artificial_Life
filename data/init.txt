@@ -5,6 +5,7 @@ fpsCap=30
 // Maximum frames per second when not in accelerated mode.
 
 map=map10.png
+
 // The map to use. The image dimensions give the size of the world. Objects are placed in the world according to pixel color.
 
 drawScale=3
@@ -13,62 +14,47 @@ drawScale=3
 minCellCount=100
 // New generation 0 cells are placed into the world whenever the population is below this number.
 
-initialMutations=50
-// The number of mutations to give generation 0 cells.
+defaultAttackStrength=1
+// The amount of hp that generation zero cells attacks remove.
 
-maxMutations=20
-// The cap on the number of mutations a child cell can get.
+defaultBiteSize=5000
+// The amount of energy a generation zero cell can consume each step.
+
+defaultBuildStrength=1
+// The amount of hp walls created by generation zero cells have.
+
+defaultEnergyStoreSize=100000
+// The amount of energy generation zero cells can store.
+
+defaultHP=1
+// The amount of hp generation zero cells have.
 
 energyGainPerFood=5000
-// The amount of energy gained when a cell eats food.
+// The amount of energy food objects contain.
 
-maxStoredEnergyMultiplier=5000
-// The maximum amount of energy a cell can store per unit size.
+baseEnergyCost=10
+// The base amount of energy used by a cell each step.
+
+energyCostMultiplier_attackStrength=1.0
+// The additional energy used by a cell each step per unit of attack strength.
+
+energyCostMultiplier_biteSize=0.001
+// The additional energy used by a cell each step per unit of bite size.
+
+energyCostMultiplier_buildStrength=1.0
+// The additional energy used by a cell each step per unit of build strength.
+
+energyCostMultiplier_energyStoreSize=0.0001
+// The additional energy used by a cell each step per unit of energy storage.
+
+energyCostMultiplier_hpMax=1.0
+// The additional energy used by a cell each step per unit of hp.
+
+energyCostMultiplier_speed=100.0
+// The additional energy used by a cell each step if moving at maximum speed.
 
 birthEnergyRequirement=1000
 // The amount of energy used when a cell produces a child (in addition to energy transferred to the child).
 
 energyUponBirth=20000
 // The amount of energy a generation 0 cell starts with.
-
-energyCostPerTick=0
-// Each cell loses this amount of energy each tick.
-
-energyCostPerNeuron=1
-// Each cell loses this amount of energy per neuron each tick.
-
-energyCostToRotate=3
-// Each cell loses this amount of energy when it rotates.
-
-energyCostToMove=5
-// Each cell loses this amount of energy when it moves.
-
-energyCostPerTileSeen=0
-// An eye costs a cell this amount of energy per tile seen.
-
-mutationChance_addConnection=0.5
-// Relative chance for a mutation to add a connection between two neurons.
-
-mutationChance_addNeuron=0.0
-// Relative chance for a mutation to create a new neuron and connect it to the neural net.
-
-mutationChance_changeNeuronThreshold=0.5
-// Relative chance for a mutation to change the firing threshold of a neuron.
-
-mutationChance_changeFiringStrength=0.5
-// Relative chance for a mutation to change the firing strength of a neuron.
-
-mutationChance_collapseConection=0.5
-// Relative chance for a mutation to collapse two connected neurons into a single neuron.
-
-mutationChance_removeConnection=0.0
-// Relative chance for a mutation to remove an existing connection between two neurons.
-
-mutationChance_splitConnection=0.5
-// Relative chance for a mutation to add a neuron in the middle of a connection between two neurons.
-
-mutationChance_addOrgan=0.1
-// Chance for an organ to be added when a cell mutates.
-
-mutationChance_removeOrgan=0.1
-// Chance for an organ to be removed when a cell mutates.

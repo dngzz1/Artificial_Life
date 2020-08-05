@@ -1,6 +1,7 @@
 import java.awt.Color;
 
 class DestructibleWall extends WorldObject implements Stepable {
+	static Color color = new Color(153, 153, 153);
 	
 	int hp;
 	
@@ -10,7 +11,17 @@ class DestructibleWall extends WorldObject implements Stepable {
 	
 	@Override
 	public Color getColor() {
-		return Color.BLACK;
+		return color;
+	}
+
+	@Override
+	public String getDisplayName() {
+		return "Destructible Wall";
+	}
+
+	@Override
+	public String getInfo() {
+		return "HP: "+hp;
 	}
 	
 	private void hit(int attackStrength) {
@@ -33,11 +44,11 @@ class DestructibleWall extends WorldObject implements Stepable {
 
 	@Override
 	public int getStepsToNextTurn() {
-		return hp;
+		return hp*10;
 	}
 
 	@Override
 	public void step() {
-		hit(1);
+		hit(10);
 	}
 }

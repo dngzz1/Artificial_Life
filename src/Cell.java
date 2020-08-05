@@ -4,14 +4,30 @@ import java.io.PrintWriter;
 import java.util.LinkedList;
 
 abstract class Cell extends WorldObject implements Stepable {
+	static final Double MINIMUM_CELL_SPEED = 0.001;
+	static final Color[] validCellColors = validCellColors();
+
+	static int defaultAttackStrength;
+	static int defaultBiteSize;
+	static int defaultBuildStrength;
+	static int defaultEnergyStoreSize;
+	static int defaultHP;
+	static int baseEnergyCost;
+	static double energyCostMultiplier_attackStrength;
+	static double energyCostMultiplier_biteSize;
+	static double energyCostMultiplier_buildStrength;
+	static double energyCostMultiplier_energyStoreSize;
+	static double energyCostMultiplier_hpMax;
+	static double energyCostMultiplier_speed;
 	static int birthEnergyRequirement;
 	static int energyUponBirth;
-	static int maxStoredEnergyMultiplier = 5000;
-	static double mutationChance_species = 0.02;
 	static int mutationRate_col = 2;
-	static double mutationRate_size = 0.2;
-	static final Color[] validCellColors = validCellColors();
-	static final double predationSizeThreshold = 0.5;
+	static double mutationChance_species = 0.02;
+	static double mutationRate_attackStrength = 0.2;
+	static double mutationRate_biteSize = 0.2;
+	static double mutationRate_buildStrength = 0.2;
+	static double mutationRate_energyStoreSize = 0.2;
+	static double mutationRate_hp = 0.2;
 	
 	// Cell Metadata //
 	Species species;
@@ -25,9 +41,13 @@ abstract class Cell extends WorldObject implements Stepable {
 	Direction facing = M.chooseRandom(Direction.values());
 	boolean isDead = false;
 	
-	// TODO : speed and size //
-	double size;
-	double speed; // turns/step (0.0 - 1.0) 
+	// Physical characteristics //
+	int attackStrength;
+	int biteSize;
+	int buildStrength;
+	int energyStoreSize;
+	int hp, hpMax;
+	double speed = 1.0; // turns/step (0.0 - 1.0) 
 	double turnFraction = 0.0;
 	
 	protected static double[][] loadMatrix(LinkedList<String> dataLineList, int rows) {
@@ -162,31 +182,50 @@ abstract class Cell extends WorldObject implements Stepable {
 	
 	Cell(){
 		species = new Species();
-		size = 20.0;
-		speed = 0.5;
+		attackStrength = defaultAttackStrength;
+		biteSize = defaultBiteSize;
+		buildStrength = defaultBuildStrength;
+		energyStoreSize = defaultEnergyStoreSize;
+		hp = hpMax = defaultHP;
 	}
 	
 	Cell(Cell parent){
 		species = parent.species;
-		size = parent.size;
-		speed = parent.speed;
+		attackStrength = parent.attackStrength;
+		biteSize = parent.biteSize;
+		buildStrength = parent.buildStrength;
+		energyStoreSize = parent.energyStoreSize;
+		hp = hpMax = parent.hpMax;
 	}
 	
 	Cell(Cell parent1, Cell parent2){
 		species = parent1.species;
-		size = M.roll(0.5) ? parent1.size : parent2.size;
-		speed = M.roll(0.5) ? parent1.speed : parent2.speed;
+		attackStrength = M.roll(0.5) ? parent1.attackStrength : parent2.attackStrength;
+		biteSize = M.roll(0.5) ? parent1.biteSize : parent2.biteSize;
+		buildStrength = M.roll(0.5) ? parent1.buildStrength : parent2.buildStrength;
+		energyStoreSize = M.roll(0.5) ? parent1.energyStoreSize : parent2.energyStoreSize;
+		hp = hpMax = M.roll(0.5) ? parent1.hpMax : parent2.hpMax;
 	}
 	
 	abstract void drawSenses(Graphics2D g);
 	
 	protected int getEnergyCostPerTurn() {
-		// This means that energy cost per game-world step equals (size + 50/turnLength).
-		return (int)(size/speed) + 100;
+		// Add up all the energy costs with the appropriate multipliers. //
+		double energyCostPerGameStep = baseEnergyCost;
+		energyCostPerGameStep += attackStrength*energyCostMultiplier_attackStrength;
+		energyCostPerGameStep += biteSize*energyCostMultiplier_biteSize;
+		energyCostPerGameStep += buildStrength*energyCostMultiplier_buildStrength;
+		energyCostPerGameStep += energyStoreSize*energyCostMultiplier_energyStoreSize;
+		energyCostPerGameStep += hpMax*energyCostMultiplier_hpMax;
+		energyCostPerGameStep += speed*energyCostMultiplier_speed;
+		
+		// Divide by speed to convert from energy per game step to energy per cell step. //
+		double energyCostPerCellStep = energyCostPerGameStep/speed;
+		return (int)(energyCostPerCellStep);
 	}
 	
 	protected int getMaxStoredEnergy() {
-		return (int)(size*maxStoredEnergyMultiplier);
+		return energyStoreSize;
 	}
 	
 	@Override
@@ -206,8 +245,11 @@ abstract class Cell extends WorldObject implements Stepable {
 		if(M.roll(mutationChance_species)) {
 			mutateSpecies();
 		}
-		speed = mutateDouble(speed, 0.0, 1.0);
-		size = mutateDoubleProportionally(size, mutationRate_size);
+		attackStrength = Math.max(1, mutateInt(attackStrength, mutationRate_attackStrength));
+		biteSize = Math.max(1, mutateInt(biteSize, mutationRate_biteSize));
+		buildStrength = Math.max(1, mutateInt(buildStrength, mutationRate_buildStrength));
+		energyStoreSize = Math.max(1, mutateInt(energyStoreSize, mutationRate_energyStoreSize));
+		hp = hpMax = Math.max(1, mutateInt(hpMax, mutationRate_hp));
 	}
 	
 	public void mutateSpecies() {

@@ -152,13 +152,13 @@ class MatrixCell extends Cell {
 	}
 	
 	private boolean attack() {
-		int energyCost = Food.energyGainPerFood/2;
+		int energyCost = Food.defaultFoodEnergy/10;
 		if(energy > energyCost) {
 			Point targetPoint = getAdjacentLocation(facing);
 			WorldObject target = ArtificialLife.getObjectAt(targetPoint);
 			if(target != null){
 				energy -= energyCost;
-				return target.interact(this, Interaction.ATTACK, 100);
+				return target.interact(this, Interaction.ATTACK, attackStrength);
 			}
 		}
 		return false;
@@ -197,7 +197,7 @@ class MatrixCell extends Cell {
 		Point targetPoint = getAdjacentLocation(facing);
 		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
 		if(target != null){
-			return target.interact(this, Interaction.EAT, size);
+			return target.interact(this, Interaction.EAT, biteSize);
 		} else {
 			return false;
 		}
@@ -206,6 +206,50 @@ class MatrixCell extends Cell {
 	@Override
 	public Color getColor() {
 		return validCellColors[col];
+	}
+
+	@Override
+	public String getDisplayName() {
+		return toString();
+	}
+
+	@Override
+	public String getInfo() {
+		String info = "";
+		info += "species = "+species.getDisplayName()+"<br>";
+		info += "generation = "+generation+"<br>";
+		info += "attackStrength = "+attackStrength+"<br>"; 
+		info += "biteSize = "+biteSize+"<br>"; 
+		info += "buildStrength = "+buildStrength+"<br>"; 
+		info += "energyStoreSize = "+energyStoreSize+"<br>"; 
+		info += "hp = "+hp+" / "+hpMax+"<br>"; 
+		info += "speed = "+speed+"<br>"; 
+		info += "energy = "+energy+"<br>";
+		info += "lifetime = "+lifetime+"<br>";
+		info += "food eaten = "+lifetimeFoodEaten+"<br>"; 
+		info += "number of children = "+children+"<br>"; 
+		info += "# memory neurons = "+memoryNeurons.length+"<br>"; 
+		info += "# concept neurons = "+conceptNeurons.length+"<br>"; 
+		return info;
+	}
+	
+	private void hit(int strength) {
+		hp -= strength;
+		
+		//XXX//
+		if(Controls.trackPredation) {
+			Display.viewX = getX();
+			Display.viewY = getY();
+			Controls.setSpeed(Controls.SPEED_SETTING[0]);
+		}
+		
+		
+		if(hp <= 0) {
+			Food remains = new Food(energy);
+			energy = 0;
+			kill(CauseOfDeath.PREDATION);
+			ArtificialLife.place(remains, location);
+		}
 	}
 	
 	private void initialiseNeuralNetworkCloningParent(MatrixCell parent) {
@@ -243,18 +287,11 @@ class MatrixCell extends Cell {
 	@Override
 	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
 		switch (interactionType) {
+		case ATTACK:
+			hit((Integer)data);
+			return true;
 		case DISPLACE:
 			return displace(interacter, this);
-		case EAT:
-			double eaterSize = (Double) data;
-			if(size < predationSizeThreshold*eaterSize) {
-				interacter.interact(this, Interaction.GIVE_ENERGY, energy);
-				energy = 0;
-				kill(CauseOfDeath.PREDATION);
-				return true;
-			} else {
-				return false;
-			}
 		case GIVE_ENERGY:
 			int amount = (Integer)data;
 			energy = Math.min(energy + amount, getMaxStoredEnergy());
@@ -477,10 +514,10 @@ class MatrixCell extends Cell {
 	
 	private void setupNeuralNetwork() {
 		// Neurons //
-		sensoryNeurons = new double[14];
-		memoryNeurons = new double[species.memoryNeuronCount()];
-		conceptNeurons = new double[species.conceptNeuronCount()];
-		motorNeurons = new double[11];
+		sensoryNeurons = new double[15];
+		memoryNeurons = new double[species.neuronCount_memory()];
+		conceptNeurons = new double[species.neuronCount_concept()];
+		motorNeurons = new double[12];
 		
 		// Connection layer 1 //
 		sensoryConceptConnections = new double[conceptNeurons.length][sensoryNeurons.length];
@@ -516,7 +553,7 @@ class MatrixCell extends Cell {
 	}
 	
 	private boolean spawnFood() {
-		int energyCost = Food.energyGainPerFood;
+		int energyCost = Food.defaultFoodEnergy;
 		if(energy > energyCost) {
 			Point p = getAdjacentLocation(facing);
 			Food food = new Food();
@@ -530,10 +567,10 @@ class MatrixCell extends Cell {
 	}
 	
 	private boolean spawnWall() {
-		int energyCost = Food.energyGainPerFood;
+		int energyCost = Food.defaultFoodEnergy;
 		if(energy > energyCost) {
 			Point p = getAdjacentLocation(facing);
-			DestructibleWall wall = new DestructibleWall(100);
+			DestructibleWall wall = new DestructibleWall(buildStrength);
 			boolean placedSuccessfully = ArtificialLife.place(wall, p);
 			if(placedSuccessfully) {
 				energy -= energyCost;
@@ -550,22 +587,24 @@ class MatrixCell extends Cell {
 			return;
 		}
 		
-		double sensoryInput;
+		// Set sensory neuron #0 to represent the age of the cell. //
+		double age = (double)(lifetime/1000.0f) + 1;
+		age = 1.0f / age;
+		sensoryNeurons[0] = age;
 		
-		// Set sensory neuron 0 to represent the age of the cell. //
-		float age = (float)(lifetime/1000.0f) + 1;
-		sensoryInput = 1.0f / age;
-		sensoryNeurons[0] = sensoryInput;
+		// Set sensory neuron #1 to represent the energy reserves of the cell. //
+		double hunger = Math.max(1.0f, (double)(energy) / (double)(Food.defaultFoodEnergy));
+		hunger = 1.0f / hunger;
+		sensoryNeurons[1] = hunger;
 		
-		// Set sensory neuron 1 to represent the energy reserves of the cell. //
-		float hunger = Math.max(1.0f, (float)(energy) / (float)(Food.energyGainPerFood));
-		sensoryInput = 1.0f / hunger;
-		sensoryNeurons[1] = sensoryInput;
+		// Set sensory neuron #2 to represent the hp of the cell. //
+		double pain = hp*1.0/hpMax;
+		sensoryNeurons[2] = pain;
 		
 		// Do a vision ray cast. //
-		rayCast(facing, 2, 3, 4, 5);
-		rayCast(facing.rotateACW(), 6, 7, 8, 9);
-		rayCast(facing.rotateCW(), 10, 11, 12, 13);
+		rayCast(facing, 3, 4, 5, 6);
+		rayCast(facing.rotateACW(), 7, 8, 9, 10);
+		rayCast(facing.rotateCW(), 11, 12, 13, 14);
 		
 		// Evaluate neural connections. //
 		for(int i = 0; i < conceptNeurons.length; i ++) {
@@ -622,9 +661,13 @@ class MatrixCell extends Cell {
 			}
 		}
 		
-		// Make a list of all the motor neuron indexes
+		// Motor neuron #0 sets the cell's speed (so is excluded from the list of possible actions). //
+		speed = Math.max(MINIMUM_CELL_SPEED, motorNeurons[0]);
+//		System.out.println("speed="+speed);
+		
+		// Make a list of the other motor neuron indexes
 		LinkedList<Integer> actionList = new LinkedList<Integer>();
-		for(int i = 0; i < motorNeurons.length; i ++) {
+		for(int i = 1; i < motorNeurons.length; i ++) {
 			actionList.add(i);
 		}
 		
@@ -659,26 +702,29 @@ class MatrixCell extends Cell {
 	private boolean takeAction(int motorToFire){
 		switch (motorToFire) {
 		case 0:
-			return move();
+			// Motor neuron #0 controls the cell's speed. //
+			return false;
 		case 1:
-			return rotateACW();
+			return move();
 		case 2:
-			return rotateCW();
+			return rotateACW();
 		case 3:
-			return eat();
+			return rotateCW();
 		case 4:
-			return pull();
+			return eat();
 		case 5:
-			return displace();
+			return pull();
 		case 6:
-			return spawnChild(M.chooseRandom(Direction.values()), energyPassedToChild);
+			return displace();
 		case 7:
-			return mate();
+			return spawnChild(M.chooseRandom(Direction.values()), energyPassedToChild);
 		case 8:
-			return spawnFood();
+			return mate();
 		case 9:
-			return spawnWall();
+			return spawnFood();
 		case 10:
+			return spawnWall();
+		case 11:
 			return attack();
 		default:
 			return false;

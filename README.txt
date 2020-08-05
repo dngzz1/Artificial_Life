@@ -9,30 +9,31 @@ Requires Java. The data folder needs to be in the same directory as the jar file
 
 
 ~~ Instructions ~~
-
+arrow keys = move the view/cursor.
+shift + arrow keys = move the view/cursor quickly.
 space = pause/unpause the simulation.
 . = simulate 1 step (if paused).
-1 = standard simulation speed (capped framerate; draw every frame).
-2 = accelerated simulation speed (uncapped framerate; draw every frame).
-3 = superfast simulation speed (uncapped framerate; draw every 10000 frames).
+1-9 = simulation speed settings.
 m = toggle between map view and follow view.
 s = toggle generation 0 cell spawning (it is recommended to disable this once a self-sustaining population has been achieved).
 f = follow the selected cell.
-* = toggle pointer to selected cell. #not currently working#
-e = toggle eye-markers for the selected cell. #not currently working#
-n = load the neural network of the selected cell into neural network viewer. #not currently working#
-p = print cells to file.
-l = load cells from file. #not currently working#
-
-The mouse can be used to move around neurons in the neural network viewer.
+v = toggle drawing the selected cell's vision. #not currently working#
+ctrl + p = print cells to file.
+ctrl + l = load cells from file. #not currently working#
+d = open all doors.
+shift + d = close all doors.
+ctrl + shift + d = forcibly close all doors (removing any objects in the way).
 
 Parameters can be set be editing data/init.txt. In particular, the map can be set to a custom image file.
 
 When the map is loaded, the following key is used:
 green/yellow = summer/winter plant (food-producer)
-black = wall
-red = hazard
-blue = immovable wall
+
+black (255, 255, 255) = wall
+red (255, 0, 0) = hazard
+dark gray (51, 51, 51) = door
+(102, 255, 102) = fruiting plant (produces food upon being hit)
+(61, 153, 61) = tuber plant (produces tubers, which turn into food upon being pulled)
 any other RGB value = empty space
 
 
