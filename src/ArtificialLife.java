@@ -510,7 +510,7 @@ class ArtificialLife implements Runnable {
 					minCellCount = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("drawScale=")){
-					Display.drawScale = Integer.parseInt(line.substring(dataIndex));
+					Display.tileSize_mapView = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("defaultAttackStrength=")){
 					Cell.defaultAttackStrength = Integer.parseInt(line.substring(dataIndex));

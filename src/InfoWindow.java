@@ -88,9 +88,11 @@ class InfoWindow extends JFrame {
 			infoText += "Here: [no object]"+"<br>";
 		} else if(hoveredObject == ArtificialLife.selectedCell) {
 			infoText += "Here: "+hoveredObject.getDisplayName()+" (following)"+"<br>";
+			infoText += "<br>";
 			infoText += hoveredObject.getInfo();
 		} else {
 			infoText += "Here: "+hoveredObject.getDisplayName()+"<br>";
+			infoText += "<br>";
 			infoText += hoveredObject.getInfo();
 		}
 		infoText += "</html>";
@@ -158,7 +160,7 @@ class InfoWindow extends JFrame {
 	
 	InfoWindow(){
 		setTitle("Info Window");
-		setSize(800, 400);
+		setSize(1024, 512);
 		setLayout(new GridLayout(1, 0));
 		add(infoLabel_general);
 		add(infoLabel_species);
