@@ -663,7 +663,6 @@ class MatrixCell extends Cell {
 		
 		// Motor neuron #0 sets the cell's speed (so is excluded from the list of possible actions). //
 		speed = Math.max(MINIMUM_CELL_SPEED, motorNeurons[0]);
-//		System.out.println("speed="+speed);
 		
 		// Make a list of the other motor neuron indexes
 		LinkedList<Integer> actionList = new LinkedList<Integer>();
