@@ -4,7 +4,7 @@
 fpsCap=30
 // Maximum frames per second when not in accelerated mode.
 
-map=map10.png
+map=mapX.png
 
 // The map to use. The image dimensions give the size of the world. Objects are placed in the world according to pixel color.
 
@@ -23,13 +23,13 @@ defaultBiteSize=5000
 defaultBuildStrength=1
 // The amount of hp walls created by generation zero cells have.
 
-defaultEnergyStoreSize=800000
+defaultEnergyStoreSize=100000
 // The amount of energy generation zero cells can store.
 
 defaultHP=1
 // The amount of hp generation zero cells have.
 
-energyGainPerFood=50000
+energyGainPerFood=5000
 // The amount of energy food objects contain. Used to be 5000
 
 baseEnergyCost=10
@@ -53,7 +53,7 @@ energyCostMultiplier_hpMax=1.0
 energyCostMultiplier_speed=100.0
 // The additional energy used by a cell each step if moving at maximum speed.
 
-birthEnergyRequirement=10000
+birthEnergyRequirement=1000
 // The amount of energy used when a cell produces a child (in addition to energy transferred to the child). Default: 1000
 
 energyUponBirth=20000

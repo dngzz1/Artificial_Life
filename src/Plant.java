@@ -3,7 +3,7 @@ import java.awt.Point;
 
 class Plant extends WorldObject implements Stepable {
 	static Color fruitingCol = new Color(0, 153, 0);
-	static Color idleCol = new Color(102, 255, 102);
+	static Color idleCol = new Color(0, 200, 0);
 	
 	boolean fruitsInSummer;
 	boolean isMovable = false;
@@ -79,7 +79,7 @@ class Plant extends WorldObject implements Stepable {
 
 class Plant_Fruit extends WorldObject {
 	static Color color = new Color(102, 255, 102);
-	static Color color_hasFruit = new Color(0, 153, 0);
+	static Color color_hasFruit = new Color(102, 255, 102);
 	
 	int lastPicked = 0;
 	int stepsToBearFruit = M.randInt(400, 800);
