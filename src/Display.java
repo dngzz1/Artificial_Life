@@ -10,16 +10,14 @@ class Display extends Frame {
 	private static final long serialVersionUID = 1L;
 	public static final Display instance = new Display();
 	
-	static int drawScale;
-	static boolean drawCellVision = false;
-	static boolean drawFollowHighlight = false;
-	
 	static Color bgColor_summer = new Color(126, 126, 126);
 	static Color bgColor_winter = new Color(102, 102, 102);
 	
-	static boolean drawAll = false;
-	static int viewX, viewY;
+	static boolean mapView = true;
+	static boolean drawCellVision = false;
 	static int tileSize = 10;
+	static int tileSize_mapView;
+	static int viewX, viewY;
 	static int viewRadiusInTiles = 48;
 	
 	public static void move(Direction direction) {
@@ -57,29 +55,21 @@ class Display extends Frame {
 		g.setColor(ArtificialLife.isSummer ? bgColor_summer : bgColor_winter);
 		g.fillRect(0, 0, getWidth(), getHeight());
 		
-		if(drawAll) { // If in map-mode, draw the whole map. //
+		if(mapView) { // If in map-mode, draw the whole map. //
 			// Draw world objects //
 			for(int x = 0; x < ArtificialLife.width; x ++){
 				for(int y = 0; y < ArtificialLife.height; y ++){
 					WorldObject object = ArtificialLife.grid[x][y];
 					if(object != null){
 						g.setColor(object.getColor());
-						g.fillRect(drawScale*x, drawScale*y, drawScale, drawScale);
+						g.fillRect(tileSize_mapView*x, tileSize_mapView*y, tileSize_mapView, tileSize_mapView);
 					}
 				}
 			}
 			
-			// Draw UI over followed cell. //
-			Cell cell = ArtificialLife.selectedCell;
-			if(cell != null){
-				g.setColor(Color.WHITE);
-				if(drawFollowHighlight){
-					g.drawLine(0, 0, drawScale*cell.location.x, drawScale*cell.location.y);
-				}
-				if(drawCellVision){
-					cell.drawSenses(g);
-				}
-			}
+			// Reticle //
+			g.setColor(Color.BLUE);
+			g.drawRect(tileSize_mapView*viewX, tileSize_mapView*viewY, tileSize_mapView, tileSize_mapView);
 		} else { // If not in map-mode, draw only the area around the player. //
 			int viewWidth = 2*viewRadiusInTiles + 1;
 			for(int x = 0; x < viewWidth; x ++) {
@@ -99,14 +89,23 @@ class Display extends Frame {
 			g.drawRect(tileSize*viewRadiusInTiles, tileSize*viewRadiusInTiles, tileSize, tileSize);
 		}
 		
+		// Draw UI over followed cell. //
+		Cell cell = ArtificialLife.selectedCell;
+		if(cell != null){
+			g.setColor(Color.WHITE);
+			if(drawCellVision){
+				cell.drawSenses( g);
+			}
+		}
+		
 		g.dispose();
 		getBufferStrategy().show();
 	}
 	
 	private void setSize() {
 		Insets insets = getInsets();
-		if(drawAll) {
-			setSize(drawScale*ArtificialLife.width + insets.left + insets.right, drawScale*ArtificialLife.height + insets.top + insets.bottom);
+		if(mapView) {
+			setSize(tileSize_mapView*ArtificialLife.width + insets.left + insets.right, tileSize_mapView*ArtificialLife.height + insets.top + insets.bottom);
 		} else {
 			int viewSize = (2*viewRadiusInTiles + 1)*tileSize;
 			setSize(viewSize + insets.left + insets.right, viewSize + insets.top + insets.bottom);
@@ -124,7 +123,7 @@ class Display extends Frame {
 	}
 	
 	public void toggleDisplayMode() {
-		drawAll = !drawAll;
+		mapView = !mapView;
 		setSize();
 	}
 }

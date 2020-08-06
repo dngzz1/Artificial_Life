@@ -6,7 +6,8 @@ import java.util.LinkedList;
 abstract class Cell extends WorldObject implements Stepable {
 	static final Double MINIMUM_CELL_SPEED = 0.001;
 	static final Color[] validCellColors = validCellColors();
-
+	
+	// Parameters //
 	static int defaultAttackStrength;
 	static int defaultBiteSize;
 	static int defaultBuildStrength;
@@ -109,15 +110,13 @@ abstract class Cell extends WorldObject implements Stepable {
 	
 	protected static int mutateInt(int value, double probability) {
 		if(M.roll(probability)) {
-			double multiplier;
 			if(M.roll(0.5)) {
 				// 50% chance to increase between x1 to x2. //
-				multiplier = M.rand(1, 2);
+				return (int)(M.rand(1, 2)*value) + 1;
 			} else {
 				// 50% chance to decrease between x0.5 to x1. //
-				multiplier = M.rand(0.5, 1);
+				return (int)(M.rand(0.5, 1)*value) - 1;
 			}
-			return (int)(value*multiplier);
 		} else {
 			return value;
 		}

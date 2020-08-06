@@ -31,7 +31,10 @@ class Plant extends WorldObject implements Stepable {
 
 	@Override
 	public String getInfo() {
-		return "Fruits in: "+(fruitsInSummer ? "summer" : "winter");
+		String info = "";
+		info += "Produces in: "+(fruitsInSummer ? "summer" : "winter")+"<br>";
+		info += "Produces every: "+stepsToBearFruit+" steps"+"<br>";
+		return info;
 	}
 	
 	@Override
@@ -104,7 +107,7 @@ class Plant_Fruit extends WorldObject {
 	@Override
 	public String getInfo() {
 		String info = "";
-		info += "Fruits every: "+stepsToBearFruit+" steps"+"<br>";
+		info += "Produces every: "+stepsToBearFruit+" steps"+"<br>";
 		info += "Has fruit: "+(hasFruit() ? "yes" : "no")+"<br>";
 		return info;
 	}

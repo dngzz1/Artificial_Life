@@ -14,6 +14,12 @@ import files.TextFileHandler;
 import maths.M;
 
 class ArtificialLife implements Runnable {
+	private static final int DEFAULT_MAP_HEIGHT = 200;
+	private static final int DEFAULT_MAP_WIDTH = 200;
+	private static final double DEFAULT_MAP_HAZARD_DENSITY = 0.01;
+	private static final double DEFAULT_MAP_PLANT_DENSITY = 0.05;
+	private static final double DEFAULT_MAP_WALL_DENSITY = 0.1;
+	
 	private static InfoWindow infoWindow;
 	static NeuralNetworkViewer neuralNetworkViewer;
 	
@@ -295,14 +301,94 @@ class ArtificialLife implements Runnable {
 		}
 	}
 	
+	private static void loadMap(String mapFilename) {
+		try {
+			loadMap_fromFile(mapFilename);
+		} catch(Exception e) {
+			// If loading the map fails, show an error message and load a default map. //
+			String errorMessage = "Error loading map."+"\n"+"Continue with default map?";
+			int choice = JOptionPane.showConfirmDialog(null, errorMessage, "", JOptionPane.YES_NO_OPTION);
+			if(choice == 0) {
+				loadMap_defaultMap();
+			} else {
+				System.exit(0);
+				return;
+			}
+		}
+	}
+	
+	private static void loadMap_defaultMap() {
+		width = DEFAULT_MAP_WIDTH;
+		height = DEFAULT_MAP_HEIGHT;
+		grid = new WorldObject[width][height];
+		
+		for(int x = 0; x < width; x ++){
+			for(int y = 0; y < height; y ++){
+				if(M.roll(DEFAULT_MAP_WALL_DENSITY)) {
+					place(new Wall(), x, y);
+				}
+				if(M.roll(DEFAULT_MAP_HAZARD_DENSITY)) {
+					place(new Hazard(), x, y);
+				}
+				if(M.roll(DEFAULT_MAP_PLANT_DENSITY)) {
+					int plantType = M.randInt(4);
+					switch(plantType) {
+					case 0:
+						place(new Plant(true), x, y);
+						break;
+					case 1:
+						place(new Plant(false), x, y);
+						break;
+					case 2:
+						place(new Plant_Fruit(), x, y);
+						break;
+					case 3:
+						place(new Plant_Tuber(), x, y);
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	private static void loadMap_fromFile(String mapFilename) {
+		BufferedImage mapImage = ImageHandler.loadImage("data/"+mapFilename);
+		width = mapImage.getWidth();
+		height = mapImage.getHeight();
+		grid = new WorldObject[width][height];
+		for(int x = 0; x < width; x ++){
+			for(int y = 0; y < height; y ++){
+				int rgb = mapImage.getRGB(x, y);
+				if(rgb == Color.BLACK.getRGB()){
+					place(new Wall(), x, y);
+				} else if(rgb == Color.RED.getRGB()){
+					place(new Hazard(), x, y);
+				} else if(rgb == Color.GREEN.getRGB()){
+					place(new Plant(true), x, y);
+				} else if(rgb == Color.YELLOW.getRGB()){
+					place(new Plant(false), x, y);
+				} else if(rgb == Plant_Fruit.color.getRGB()){
+					place(new Plant_Fruit(), x, y);
+				} else if(rgb == Plant_Tuber.color.getRGB()){
+					place(new Plant_Tuber(), x, y);
+				} else if(rgb == Color.MAGENTA.getRGB()){
+					place(new Creator(), x, y);
+				} else if(rgb == Door.color.getRGB()){
+					place(new Door(), x, y);
+				}
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		// Ask if we want to run auto-testing. //
-		int choice = JOptionPane.showConfirmDialog(null, "Run Auto-testing?", "", JOptionPane.YES_NO_OPTION);
-		boolean doAutotest = (choice == 0);
-		if(choice == -1) {
-			System.exit(0);
-			return;
-		}
+		boolean doAutotest = false; // Disabled for now.
+//		int choice = JOptionPane.showConfirmDialog(null, "Run Auto-testing?", "", JOptionPane.YES_NO_OPTION);
+//		boolean doAutotest = (choice == 0);
+//		if(choice == -1) {
+//			System.exit(0);
+//			return;
+//		}
 		
 		ArtificialLife.setup();
 		Controls.setup();
@@ -424,7 +510,7 @@ class ArtificialLife implements Runnable {
 					minCellCount = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("drawScale=")){
-					Display.drawScale = Integer.parseInt(line.substring(dataIndex));
+					Display.tileSize_mapView = Integer.parseInt(line.substring(dataIndex));
 				}
 				if(line.startsWith("defaultAttackStrength=")){
 					Cell.defaultAttackStrength = Integer.parseInt(line.substring(dataIndex));
@@ -475,32 +561,7 @@ class ArtificialLife implements Runnable {
 		}
 		
 		// Load the map. //
-		BufferedImage mapImage = ImageHandler.loadImage("data/"+mapFilename);
-		width = mapImage.getWidth();
-		height = mapImage.getHeight();
-		grid = new WorldObject[width][height];
-		for(int x = 0; x < width; x ++){
-			for(int y = 0; y < height; y ++){
-				int rgb = mapImage.getRGB(x, y);
-				if(rgb == Color.BLACK.getRGB()){
-					place(new Wall(), x, y);
-				} else if(rgb == Color.RED.getRGB()){
-					place(new Hazard(), x, y);
-				} else if(rgb == Color.GREEN.getRGB()){
-					place(new Plant(true), x, y);
-				} else if(rgb == Color.YELLOW.getRGB()){
-					place(new Plant(false), x, y);
-				} else if(rgb == Plant_Fruit.color.getRGB()){
-					place(new Plant_Fruit(), x, y);
-				} else if(rgb == Plant_Tuber.color.getRGB()){
-					place(new Plant_Tuber(), x, y);
-				} else if(rgb == Color.MAGENTA.getRGB()){
-					place(new Creator(), x, y);
-				} else if(rgb == Door.color.getRGB()){
-					place(new Door(), x, y);
-				}
-			}
-		}
+		loadMap(mapFilename);
 		
 		// Center the display. //
 		Display.viewX = width/2;

@@ -7,6 +7,9 @@ import java.util.LinkedList;
 import files.TextFileHandler;
 
 class MatrixCell extends Cell {
+	static int rayCastLength = 10;
+	static double mutationProbability = 0.05;
+	static double mutationProbability_col = 0.9;
 	
 	
 	/////////////////////////////////////////////////
@@ -17,16 +20,13 @@ class MatrixCell extends Cell {
 	/////////////////////////////////////////////////
 	
 	
-	static int rayCastLength = 10;
-	static double mutationProbability = 0.05;
-	static double mutationProbability_col = 0.9;
-	
 	// Cell Data //
-	int col;
+	int hue;
 	int energyPassedToChild;
 	
 	// Cell Variables //
 	MatrixCell mate = null;
+	Action lastActionTaken = null;
 	
 	// Neurons //
 	double[] sensoryNeurons;
@@ -64,7 +64,7 @@ class MatrixCell extends Cell {
 		initialiseNeuralNetworkRandomly();
 		
 		energy = energyUponBirth;
-		col = M.randInt(validCellColors.length);
+		hue = M.randInt(validCellColors.length);
 		energyPassedToChild = energyUponBirth;
 	}
 	
@@ -73,7 +73,7 @@ class MatrixCell extends Cell {
 		setupNeuralNetwork();
 		initialiseNeuralNetworkCloningParent(parent);
 		
-		col = parent.col;
+		hue = parent.hue;
 		energyPassedToChild = parent.energyPassedToChild;
 	}
 	
@@ -85,7 +85,7 @@ class MatrixCell extends Cell {
 		setupNeuralNetwork();
 		initialiseNeuralNetworkMergingParents(parent1, parent2);
 		
-		col = M.roll(0.5) ? parent1.col : parent2.col;
+		hue = M.roll(0.5) ? parent1.hue : parent2.hue;
 		energyPassedToChild = M.roll(0.5) ? parent1.energyPassedToChild : parent2.energyPassedToChild;
 	}
 	
@@ -100,7 +100,7 @@ class MatrixCell extends Cell {
 		
 		// Cell data //
 		lineList.remove();
-		col = Integer.parseInt(lineList.remove());
+		hue = Integer.parseInt(lineList.remove());
 		lineList.remove();
 		energyPassedToChild = Integer.parseInt(lineList.remove());
 		
@@ -151,7 +151,7 @@ class MatrixCell extends Cell {
 		memoryBias = loadVector(lineList.remove());
 	}
 	
-	private boolean attack() {
+	private boolean action_attack() {
 		int energyCost = Food.defaultFoodEnergy/10;
 		if(energy > energyCost) {
 			Point targetPoint = getAdjacentLocation(facing);
@@ -164,12 +164,7 @@ class MatrixCell extends Cell {
 		return false;
 	}
 	
-	@Override
-	protected MatrixCell clone() {
-		return new MatrixCell(this);
-	}
-	
-	private boolean displace() {
+	private boolean action_displace() {
 		Point targetPoint = getAdjacentLocation(facing);
 		ArtificialLife.wrapPoint(targetPoint);
 		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
@@ -180,20 +175,7 @@ class MatrixCell extends Cell {
 		}
 	}
 	
-	void drawSenses(Graphics2D g){
-		Point[] eyeVectorList = new Point[3];
-		eyeVectorList[0] = facing.getVector();
-		eyeVectorList[1] = facing.rotateACW().getVector();
-		eyeVectorList[2] = facing.rotateCW().getVector();
-		for(Point eyeVector : eyeVectorList) {
-			int distance = rayCastLength;
-			int drawScale = Display.drawScale;
-			Point loc = getLocation();
-			g.drawLine(drawScale*loc.x, drawScale*loc.y, drawScale*(loc.x + distance*eyeVector.x), drawScale*(loc.y + distance*eyeVector.y));
-		}
-	}
-	
-	private boolean eat() {
+	private boolean action_eat() {
 		Point targetPoint = getAdjacentLocation(facing);
 		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
 		if(target != null){
@@ -203,9 +185,130 @@ class MatrixCell extends Cell {
 		}
 	}
 	
+	private boolean action_mate() {
+		Point targetPoint = getAdjacentLocation(facing);
+		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
+		if(target != null && target instanceof MatrixCell){
+			((MatrixCell)target).setMate(this);
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	private boolean action_move() {
+		return moveTo(M.add(facing.getVector(), getLocation()));
+	}
+	
+	private boolean action_pull() {
+		Point targetPoint = getAdjacentLocation(facing);
+		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
+		if(target != null){
+			return target.interact(this, Interaction.PULL, null);
+		} else {
+			return false;
+		}
+	}
+	
+	private boolean action_rotateACW() {
+		facing = facing.rotateACW();
+		return true;
+	}
+	
+	private boolean action_rotateCW() {
+		facing = facing.rotateCW();
+		return true;
+	}
+	
+	private boolean action_spawnChild(Direction direction, int energyPassedToChild) {
+		int energyCost = birthEnergyRequirement + energyPassedToChild;
+		if(energy > energyCost){
+			Point p = getAdjacentLocation(direction);
+			MatrixCell child = (mate == null) ? createChild(this) : createChild(this, mate);
+			boolean placedSuccessfully = ArtificialLife.place(child, p);
+			if(placedSuccessfully){
+				energy -= energyCost;
+				child.energy = energyPassedToChild;
+				children ++;
+				ArtificialLife.totalChildren ++;
+				if(mate != null) {
+					mate.children ++;
+					ArtificialLife.totalChildrenWithTwoParents ++;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean action_spawnFood() {
+		int energyCost = Food.defaultFoodEnergy;
+		if(energy > energyCost) {
+			Point p = getAdjacentLocation(facing);
+			Food food = new Food();
+			boolean placedSuccessfully = ArtificialLife.place(food, p);
+			if(placedSuccessfully) {
+				energy -= energyCost;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean action_spawnWall() {
+		int energyCost = Food.defaultFoodEnergy;
+		if(energy > energyCost) {
+			Point p = getAdjacentLocation(facing);
+			DestructibleWall wall = new DestructibleWall(buildStrength);
+			boolean placedSuccessfully = ArtificialLife.place(wall, p);
+			if(placedSuccessfully) {
+				energy -= energyCost;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	protected MatrixCell clone() {
+		return new MatrixCell(this);
+	}
+	
+	private void control_speed(double motorNeuronFiringStrength) {
+		speed = Math.max(MINIMUM_CELL_SPEED, motorNeuronFiringStrength);
+	}
+	
+	void drawSenses(Graphics2D g){
+		Point location = getLocation();
+		Direction[] eyeDirectionList = new Direction[3];
+		eyeDirectionList[0] = facing;
+		eyeDirectionList[1] = facing.rotateACW();
+		eyeDirectionList[2] = facing.rotateCW();
+		int x1, y1, x2, y2;
+		for(Direction eyeDirection : eyeDirectionList) {
+			RayCastResult result = RayCast.castRay(location, eyeDirection, rayCastLength);
+			int distance = result.distanceToObject + 1;
+			Point eyeVector = eyeDirection.getVector();
+			if(Display.mapView) {
+				int tileSize = Display.tileSize_mapView;
+				x1 = tileSize*location.x + tileSize/2;
+				y1 = tileSize*location.y + tileSize/2;
+				x2 = x1 + tileSize*distance*eyeVector.x;
+				y2 = y1 + tileSize*distance*eyeVector.y;
+			} else {
+				int tileSize = Display.tileSize;
+				x1 = tileSize*(Display.viewRadiusInTiles) + tileSize/2;
+				y1 = tileSize*(Display.viewRadiusInTiles) + tileSize/2;
+				x2 = x1 + tileSize*distance*eyeVector.x;
+				y2 = y1 + tileSize*distance*eyeVector.y;
+			}
+			g.drawLine(x1, y1, x2, y2);
+		}
+	}
+	
 	@Override
 	public Color getColor() {
-		return validCellColors[col];
+		return validCellColors[hue];
 	}
 
 	@Override
@@ -216,20 +319,25 @@ class MatrixCell extends Cell {
 	@Override
 	public String getInfo() {
 		String info = "";
+		info += "Species Data:"+"<br>";
 		info += "species = "+species.getDisplayName()+"<br>";
+		info += "# memory neurons = "+memoryNeurons.length+"<br>"; 
+		info += "# concept neurons = "+conceptNeurons.length+"<br>"; 
+		info += "<br>";
+		info += "Cell Data:"+"<br>";
 		info += "generation = "+generation+"<br>";
 		info += "attackStrength = "+attackStrength+"<br>"; 
 		info += "biteSize = "+biteSize+"<br>"; 
 		info += "buildStrength = "+buildStrength+"<br>"; 
-		info += "energyStoreSize = "+energyStoreSize+"<br>"; 
+		info += "energy = "+energy+" / "+energyStoreSize+"<br>"; 
 		info += "hp = "+hp+" / "+hpMax+"<br>"; 
 		info += "speed = "+speed+"<br>"; 
-		info += "energy = "+energy+"<br>";
+		info += "<br>";
+		info += "Metadata:"+"<br>";
+		info += "last action taken: "+lastActionTaken.name().toLowerCase()+"<br>";
 		info += "lifetime = "+lifetime+"<br>";
 		info += "food eaten = "+lifetimeFoodEaten+"<br>"; 
 		info += "number of children = "+children+"<br>"; 
-		info += "# memory neurons = "+memoryNeurons.length+"<br>"; 
-		info += "# concept neurons = "+conceptNeurons.length+"<br>"; 
 		return info;
 	}
 	
@@ -316,21 +424,6 @@ class MatrixCell extends Cell {
 		ArtificialLife.totalDeathsBy[cause.ordinal()] ++;
 	}
 	
-	private boolean mate() {
-		Point targetPoint = getAdjacentLocation(facing);
-		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
-		if(target != null && target instanceof MatrixCell){
-			((MatrixCell)target).setMate(this);
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	private boolean move() {
-		return moveTo(M.add(facing.getVector(), getLocation()));
-	}
-	
 	private boolean moveTo(Point p){
 		ArtificialLife.wrapPoint(p);
 		if(ArtificialLife.grid[p.x][p.y] == null){
@@ -344,8 +437,8 @@ class MatrixCell extends Cell {
 	@Override
 	public void mutate() {
 		super.mutate();
-		col = mutateCol(col, mutationProbability_col);
-		energyPassedToChild = mutateInt(energyPassedToChild, mutationProbability);
+		hue = mutateCol(hue, mutationProbability_col);
+		energyPassedToChild = Math.max(1, mutateInt(energyPassedToChild, mutationProbability));
 		mutateMatrix(sensoryConceptConnections, mutationProbability);
 		mutateMatrix(memoryConceptConnections, mutationProbability);
 		mutateVector(conceptBias, mutationProbability);
@@ -403,7 +496,7 @@ class MatrixCell extends Cell {
 		
 		// Cell data //
 		pw.println("col=");
-		pw.println(col);
+		pw.println(hue);
 		pw.println("energyPassedToChild=");
 		pw.println(energyPassedToChild);
 		
@@ -455,36 +548,23 @@ class MatrixCell extends Cell {
 		pw.close();
 	}
 	
-	private boolean pull() {
-		Point targetPoint = getAdjacentLocation(facing);
-		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
-		if(target != null){
-			return target.interact(this, Interaction.PULL, null);
-		} else {
-			return false;
+	private void setMate(MatrixCell cell) {
+		if(species == cell.species) {
+			mate = cell;
 		}
 	}
 	
-	private void rayCast(Direction direction, int distanceNeuron, int redNeuron, int greenNeuron, int blueNeuron) {
-		WorldObject seenObject = null;
-		Point p = new Point(getLocation());
-		Point d = direction.getVector();
-		int distance;
-		for(distance = 0; distance < rayCastLength; distance ++){
-			p.x += d.x;
-			p.y += d.y;
-			ArtificialLife.wrapPoint(p);
-			seenObject = ArtificialLife.grid[p.x][p.y];
-			if(seenObject != null){
-				break;
-			}
-		}
+	private void senseVision(Direction direction, int distanceNeuron, int redNeuron, int greenNeuron, int blueNeuron) {
+		// Perform a vision ray-cast. //
+		RayCastResult result = RayCast.castRay(getLocation(), direction, rayCastLength);
+		WorldObject seenObject = result.object;
+		int distance = result.distanceToObject;
 		
-		// Set sensory neuron 0 to represent the distance to the seen object. //
+		// Represent the distance to the seen object in a sensory neuron. //
 		double sensoryInput = (float)distance / (float)rayCastLength;
 		sensoryNeurons[distanceNeuron] = sensoryInput;
 		
-		// Set sensory neurons 1-3 to represent the colour of the seen object. //
+		// Represent the red/green/blue values of the seen object in sensory neurons. //
 		Color seenColor = seenObject != null ? seenObject.getColor() : null;
 		seenColor = (seenColor == null) ? Color.BLACK : seenColor;
 		sensoryInput = (float)seenColor.getRed() / 255.0f;
@@ -493,23 +573,6 @@ class MatrixCell extends Cell {
 		sensoryNeurons[greenNeuron] = sensoryInput;
 		sensoryInput = (float)seenColor.getBlue() / 255.0f;
 		sensoryNeurons[blueNeuron] = sensoryInput;
-		
-	}
-	
-	private boolean rotateACW() {
-		facing = facing.rotateACW();
-		return true;
-	}
-	
-	private boolean rotateCW() {
-		facing = facing.rotateCW();
-		return true;
-	}
-	
-	private void setMate(MatrixCell cell) {
-		if(species == cell.species) {
-			mate = cell;
-		}
 	}
 	
 	private void setupNeuralNetwork() {
@@ -517,7 +580,7 @@ class MatrixCell extends Cell {
 		sensoryNeurons = new double[15];
 		memoryNeurons = new double[species.neuronCount_memory()];
 		conceptNeurons = new double[species.neuronCount_concept()];
-		motorNeurons = new double[12];
+		motorNeurons = new double[Action.values().length];
 		
 		// Connection layer 1 //
 		sensoryConceptConnections = new double[conceptNeurons.length][sensoryNeurons.length];
@@ -529,55 +592,6 @@ class MatrixCell extends Cell {
 		motorBias = new double[motorNeurons.length];
 		conceptMemoryConnections = new double[memoryNeurons.length][conceptNeurons.length];
 		memoryBias = new double[memoryNeurons.length];
-	}
-	
-	private boolean spawnChild(Direction direction, int energyPassedToChild) {
-		int energyCost = birthEnergyRequirement + energyPassedToChild;
-		if(energy > energyCost){
-			Point p = getAdjacentLocation(direction);
-			MatrixCell child = (mate == null) ? createChild(this) : createChild(this, mate);
-			boolean placedSuccessfully = ArtificialLife.place(child, p);
-			if(placedSuccessfully){
-				energy -= energyCost;
-				child.energy = energyPassedToChild;
-				children ++;
-				ArtificialLife.totalChildren ++;
-				if(mate != null) {
-					mate.children ++;
-					ArtificialLife.totalChildrenWithTwoParents ++;
-				}
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private boolean spawnFood() {
-		int energyCost = Food.defaultFoodEnergy;
-		if(energy > energyCost) {
-			Point p = getAdjacentLocation(facing);
-			Food food = new Food();
-			boolean placedSuccessfully = ArtificialLife.place(food, p);
-			if(placedSuccessfully) {
-				energy -= energyCost;
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private boolean spawnWall() {
-		int energyCost = Food.defaultFoodEnergy;
-		if(energy > energyCost) {
-			Point p = getAdjacentLocation(facing);
-			DestructibleWall wall = new DestructibleWall(buildStrength);
-			boolean placedSuccessfully = ArtificialLife.place(wall, p);
-			if(placedSuccessfully) {
-				energy -= energyCost;
-				return true;
-			}
-		}
-		return false;
 	}
 
 	@Override
@@ -602,9 +616,9 @@ class MatrixCell extends Cell {
 		sensoryNeurons[2] = pain;
 		
 		// Do a vision ray cast. //
-		rayCast(facing, 3, 4, 5, 6);
-		rayCast(facing.rotateACW(), 7, 8, 9, 10);
-		rayCast(facing.rotateCW(), 11, 12, 13, 14);
+		senseVision(facing, 3, 4, 5, 6);
+		senseVision(facing.rotateACW(), 7, 8, 9, 10);
+		senseVision(facing.rotateCW(), 11, 12, 13, 14);
 		
 		// Evaluate neural connections. //
 		for(int i = 0; i < conceptNeurons.length; i ++) {
@@ -662,8 +676,7 @@ class MatrixCell extends Cell {
 		}
 		
 		// Motor neuron #0 sets the cell's speed (so is excluded from the list of possible actions). //
-		speed = Math.max(MINIMUM_CELL_SPEED, motorNeurons[0]);
-//		System.out.println("speed="+speed);
+		control_speed(motorNeurons[Action.NONACTION_SPEED_CONTROL.ordinal()]);
 		
 		// Make a list of the other motor neuron indexes
 		LinkedList<Integer> actionList = new LinkedList<Integer>();
@@ -685,7 +698,7 @@ class MatrixCell extends Cell {
 				break;
 			}
 			
-			boolean successful = takeAction(motorToFire);
+			boolean successful = takeAction(Action.values()[motorToFire]);
 			if(successful){
 				break;
 			}
@@ -699,35 +712,39 @@ class MatrixCell extends Cell {
 		}
 	}
 	
-	private boolean takeAction(int motorToFire){
-		switch (motorToFire) {
-		case 0:
-			// Motor neuron #0 controls the cell's speed. //
+	private boolean takeAction(Action action){
+		lastActionTaken = action;
+		switch (action) {
+		case NONACTION_SPEED_CONTROL:
 			return false;
-		case 1:
-			return move();
-		case 2:
-			return rotateACW();
-		case 3:
-			return rotateCW();
-		case 4:
-			return eat();
-		case 5:
-			return pull();
-		case 6:
-			return displace();
-		case 7:
-			return spawnChild(M.chooseRandom(Direction.values()), energyPassedToChild);
-		case 8:
-			return mate();
-		case 9:
-			return spawnFood();
-		case 10:
-			return spawnWall();
-		case 11:
-			return attack();
+		case MOVE:
+			return action_move();
+		case ROTATE_ACW:
+			return action_rotateACW();
+		case ROTATE_CW:
+			return action_rotateCW();
+		case ATTACK:
+			return action_attack();
+		case EAT:
+			return action_eat();
+		case MATE:
+			return action_mate();
+		case DISPLACE:
+			return action_displace();
+		case PULL:
+			return action_pull();
+		case SPAWN_CHILD:
+			return action_spawnChild(M.chooseRandom(Direction.values()), energyPassedToChild);
+		case SPAWN_FOOD:
+			return action_spawnFood();
+		case SPAWN_WALL:
+			return action_spawnWall();
 		default:
 			return false;
 		}
+	}
+	
+	private enum Action {
+		NONACTION_SPEED_CONTROL, MOVE, ROTATE_ACW, ROTATE_CW, ATTACK, EAT, MATE, DISPLACE, PULL, SPAWN_CHILD, SPAWN_FOOD, SPAWN_WALL;
 	}
 }
