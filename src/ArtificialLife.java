@@ -21,6 +21,7 @@ class ArtificialLife implements Runnable {
 	private static final double DEFAULT_MAP_WALL_DENSITY = 0.1;
 	
 	private static InfoWindow infoWindow;
+	private static InfoWindow_Species speciesWindow;
 	static NeuralNetworkViewer neuralNetworkViewer;
 	
 	static int fpsCap;
@@ -632,6 +633,9 @@ class ArtificialLife implements Runnable {
 		infoWindow = new InfoWindow();
 		infoWindow.addKeyListener(Controls.instance);
 		infoWindow.setVisible(true);
+		speciesWindow = new InfoWindow_Species();
+		speciesWindow.addKeyListener(Controls.instance);
+		speciesWindow.setVisible(true);
 	}
 	
 	public void run() {
