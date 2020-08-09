@@ -644,12 +644,20 @@ class ArtificialLife implements Runnable {
 			if(Controls.isGameRunning){
 				step();
 			} else if(Controls.stepSimulationOnce){
-				step();
 				Controls.stepSimulationOnce = false;
+				step();
 			}
 			if(stepCounter % Controls.stepsPerDraw == 0){
 				Display.instance.draw();
 				infoWindow.update();
+			}
+			if(Controls.updateSpeciesInfoWindow_window) {
+				Controls.updateSpeciesInfoWindow_window = false;
+				speciesWindow.update();
+			}
+			if(Controls.updateSpeciesInfoWindow_speciesInfo) {
+				Controls.updateSpeciesInfoWindow_speciesInfo = false;
+				speciesWindow.updateSpeciesInfo();
 			}
 			if(Controls.isFramerateCapped){
 				try{

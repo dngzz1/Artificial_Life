@@ -20,6 +20,38 @@ class Display extends Frame {
 	static int viewX, viewY;
 	static int viewRadiusInTiles = 48;
 	
+	// Species Highlight //
+	public static Species speciesHighlighted = null;
+	private static boolean flashHighlight = false;
+	private static Color flashColor_off = Color.BLACK;
+	private static Color flashColor_on = Color.WHITE;
+	private static long highlightEndTime = 0;
+	private static long highlightEndDuration = 2000;
+	private static long highlightSwitchTime = 0;
+	private static long highlightSwitchDuration = 150;
+	
+	private boolean highlight(WorldObject object) {
+		return (speciesHighlighted != null && object instanceof Cell && ((Cell)object).species == speciesHighlighted);
+	}
+	
+	private Color highlightColor() {
+		long currentTime = System.currentTimeMillis();
+		if(currentTime > highlightEndTime) {
+			speciesHighlighted = null;
+		} else if(currentTime > highlightSwitchTime) {
+			flashHighlight = !flashHighlight;
+			highlightSwitchTime += highlightSwitchDuration;
+		}
+		return flashHighlight ? flashColor_on : flashColor_off;
+	}
+	
+	public static void highlightSpecies(Species species) {
+		long currentTime = System.currentTimeMillis();
+		speciesHighlighted = species;
+		highlightEndTime = currentTime + highlightEndDuration;
+		highlightSwitchTime = currentTime + highlightSwitchDuration;
+	}
+	
 	public static void move(Direction direction) {
 		Point newLocation = new Point(direction.getVector());
 		newLocation.x += viewX;
@@ -61,7 +93,7 @@ class Display extends Frame {
 				for(int y = 0; y < ArtificialLife.height; y ++){
 					WorldObject object = ArtificialLife.grid[x][y];
 					if(object != null){
-						g.setColor(object.getColor());
+						g.setColor(highlight(object) ? highlightColor() : object.getColor());
 						g.fillRect(tileSize_mapView*x, tileSize_mapView*y, tileSize_mapView, tileSize_mapView);
 					}
 				}
@@ -78,7 +110,10 @@ class Display extends Frame {
 					int dy = y - viewRadiusInTiles;
 					WorldObject object = ArtificialLife.getObjectAt(viewX + dx, viewY + dy);
 					if(object != null) {
-						g.setColor(object.getColor());
+						
+						// TODO - replace this with more general object drawing code. //
+						
+						g.setColor(highlight(object) ? highlightColor() : object.getColor());
 						g.fillRect(tileSize*x, tileSize*y, tileSize, tileSize);
 					}
 				}

@@ -15,6 +15,8 @@ class InfoWindow_Species extends JFrame implements ActionListener {
 	private static JButton refreshButton = new JButton("Refresh");
 	private static JPanel infoPanel = new JPanel();
 	private static JLabel infoLabel = new JLabel();
+	private static JPanel highlightButtonPanel = new JPanel();
+	private static JButton highlightButton = new JButton("Highlight Cells");
 	
 	private static LinkedList<Species> speciesList = new LinkedList<Species>();
 	private static Species selectedSpecies = null;
@@ -43,16 +45,23 @@ class InfoWindow_Species extends JFrame implements ActionListener {
 		speciesSelectPanel.add(refreshButton, BorderLayout.EAST);
 		refreshButton.addActionListener(this);
 		add(infoPanel, BorderLayout.CENTER);
-		infoPanel.add(infoLabel);
+		infoPanel.setLayout(new BorderLayout());
+		infoPanel.add(infoLabel, BorderLayout.CENTER);
+		infoPanel.add(highlightButtonPanel, BorderLayout.SOUTH);
+		highlightButtonPanel.add(highlightButton);
+		highlightButton.addActionListener(this);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		if(e.getSource() == highlightButton) {
+			Display.highlightSpecies(selectedSpecies);
+		}
 		if(e.getSource() == refreshButton) {
-			update(); // TODO - make this call update() in the main loop, so as to avoid comod issues.
+			Controls.updateSpeciesInfoWindow_window = true;
 		}
 		if(e.getSource() == speciesSelectBox) {
-			updateSpeciesInfo();
+			Controls.updateSpeciesInfoWindow_speciesInfo = true;
 		}
 	}
 	
@@ -70,9 +79,11 @@ class InfoWindow_Species extends JFrame implements ActionListener {
 		repaint();
 	}
 	
-	private void updateSpeciesInfo() {
+	public void updateSpeciesInfo() {
 		int selectedIndex = speciesSelectBox.getSelectedIndex();
-		selectedSpecies = speciesList.get(selectedIndex);
-		infoLabel.setText(infoText());
+		if(selectedIndex != -1) {
+			selectedSpecies = speciesList.get(selectedIndex);
+			infoLabel.setText(infoText());
+		}
 	}
 }

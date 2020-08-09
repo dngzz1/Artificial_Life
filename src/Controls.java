@@ -17,6 +17,9 @@ class Controls implements KeyListener {
 	public static boolean spawnNewCells = true;
 	public static boolean stepSimulationOnce = false;
 	
+	// Species Info Window //
+	public static boolean updateSpeciesInfoWindow_window = false;
+	public static boolean updateSpeciesInfoWindow_speciesInfo = false;
 	
 	///XXX///
 	public static boolean trackPredation = false;
