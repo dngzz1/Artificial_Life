@@ -391,6 +391,7 @@ class ArtificialLife implements Runnable {
 //			return;
 //		}
 		
+		
 		ArtificialLife.setup();
 		Controls.setup();
 		
@@ -630,12 +631,12 @@ class ArtificialLife implements Runnable {
 //		neuralNetworkViewer = new NeuralNetworkViewer();
 		Display.instance.addKeyListener(Controls.instance);
 		Display.instance.setVisible(true);
-		infoWindow = new InfoWindow();
-		infoWindow.addKeyListener(Controls.instance);
-		infoWindow.setVisible(true);
 		speciesWindow = new InfoWindow_Species();
 		speciesWindow.addKeyListener(Controls.instance);
 		speciesWindow.setVisible(true);
+		infoWindow = new InfoWindow();
+		infoWindow.addKeyListener(Controls.instance);
+		infoWindow.setVisible(true);
 	}
 	
 	public void run() {
@@ -650,14 +651,7 @@ class ArtificialLife implements Runnable {
 			if(stepCounter % Controls.stepsPerDraw == 0){
 				Display.instance.draw();
 				infoWindow.update();
-			}
-			if(Controls.updateSpeciesInfoWindow_window) {
-				Controls.updateSpeciesInfoWindow_window = false;
 				speciesWindow.update();
-			}
-			if(Controls.updateSpeciesInfoWindow_speciesInfo) {
-				Controls.updateSpeciesInfoWindow_speciesInfo = false;
-				speciesWindow.updateSpeciesInfo();
 			}
 			if(Controls.isFramerateCapped){
 				try{

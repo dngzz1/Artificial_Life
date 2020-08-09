@@ -110,17 +110,17 @@ class InfoWindow extends JFrame {
 	
 	InfoWindow(){
 		setTitle("Info");
-		setSize(1024, 512);
+		setSize(512, 512);
 		setLayout(new GridLayout(1, 0));
 		add(infoLabel_general);
-		add(infoLabel_species);
+//		add(infoLabel_species); XXX
 		add(infoLabel_object);
 	}
 	
 	public void update(){
 		// General/Species/Object info text. //
 		infoLabel_general.setText(infoText_general());
-		infoLabel_species.setText(infoText_species());
+//		infoLabel_species.setText(infoText_species()); XXX
 		infoLabel_object.setText(infoText_object());
 		
 		// Repaint once label text is updated. //

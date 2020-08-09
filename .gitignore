@@ -1,3 +1,6 @@
 .*
 *.class
 *.jar
+*.xcf
+*.png
+logs/*
