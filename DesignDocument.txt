@@ -3,7 +3,7 @@ DESIGN DOCUMENT: Artificial Life
 
 ~~ TO-DO ~~
 
-> Add features to the species info window (in particular, the ability to highlight cells in a species).
+> Track species herbivory vs carnivory.
 > Properly balance cell energy input/output.
 > Test different setups for matrix-type cells: number of memory/concept neurons, number of concept neuron layers, mutation rates.
 > Improved saving/loading. Separate handling the map and the cells. More options.
@@ -16,6 +16,6 @@ DESIGN DOCUMENT: Artificial Life
 
 ~~ Bugs ~~
 
+> Keyboard commands don't work when species info window has focus.
 > Neural network viewer needs to be updated to work with matrix-type cells.
-> Eye-markers need to be updated to work in non-map display mode.
 > Toggling map-mode sometimes doesn't work properly.

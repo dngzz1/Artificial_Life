@@ -1,5 +1,19 @@
 class M extends maths.M {
 	
+	static String abbreviate(int i) {
+		String sign = (i < 0) ? "-" : "";
+		String suffix = "";
+		i = Math.abs(i);
+		if(1000 < i && i < 1000000) {
+			i = i/1000;
+			suffix = "k";
+		} else if(1000000 < i && i < 1000000000) {
+			i = i/1000000;
+			suffix = "M";
+		}
+		return sign+i+suffix;
+	}
+	
 	static double[][] cloneMatrix(double[][] matrix){
 		if(matrix.length == 0) {
 			return new double[0][0];

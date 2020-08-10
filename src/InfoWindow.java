@@ -2,13 +2,10 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import general.Tuple;
-
 class InfoWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
 	private JLabel infoLabel_general = new JLabel();
-	private JLabel infoLabel_species = new JLabel();
 	private JLabel infoLabel_object = new JLabel();
 	
 	private static int generationMax(){
@@ -99,28 +96,17 @@ class InfoWindow extends JFrame {
 		return infoText;
 	}
 	
-	private static String infoText_species() {
-		String infoText = "<html>";
-		for(Tuple<Species, Integer> speciesCount : Species.speciesCountList(20, 2)) {
-			infoText += speciesCount.e1.getDisplayName()+" ("+speciesCount.e2+" cells)"+"<br>";
-		}
-		infoText += "</html>";
-		return infoText;
-	}
-	
 	InfoWindow(){
 		setTitle("Info");
-		setSize(512, 512);
+		setSize(600, 500);
 		setLayout(new GridLayout(1, 0));
 		add(infoLabel_general);
-//		add(infoLabel_species); XXX
 		add(infoLabel_object);
 	}
 	
 	public void update(){
 		// General/Species/Object info text. //
 		infoLabel_general.setText(infoText_general());
-//		infoLabel_species.setText(infoText_species()); XXX
 		infoLabel_object.setText(infoText_object());
 		
 		// Repaint once label text is updated. //
