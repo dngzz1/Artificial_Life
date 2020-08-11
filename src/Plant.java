@@ -43,7 +43,7 @@ class Plant extends WorldObject implements Stepable {
 	}
 	
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		case PUSH:
 			if(isMovable) {
@@ -117,7 +117,7 @@ class Plant_Fruit extends WorldObject {
 	}
 
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		case ATTACK:
 			if(hasFruit()) {
@@ -166,7 +166,7 @@ class Plant_Tuber extends WorldObject implements Stepable {
 	}
 	
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		default:
 			return false;
@@ -198,7 +198,7 @@ class Tuber extends WorldObject {
 	}
 
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		case PULL:
 			Point originalLocation = new Point(location);

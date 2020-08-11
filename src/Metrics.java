@@ -37,6 +37,18 @@ class Metrics {
 			return cell.hpMax;
 		}
 	};
+	public static CellMetric<Integer> lifetimeFoodEatenMetric = new CellMetric<Integer>() {
+		@Override
+		public Integer data(Cell cell) {
+			return cell.lifetimeFoodEaten;
+		}
+	};
+	public static CellMetric<Integer> lifetimeFoodEatenByPredationMetric = new CellMetric<Integer>() {
+		@Override
+		public Integer data(Cell cell) {
+			return cell.lifetimeFoodEatenByPredation;
+		}
+	};
 	
 	private static int getCellCount(CellCondition condition) {
 		int count = 0;
@@ -79,7 +91,7 @@ class Metrics {
 	}
 	
 	public static int getMedian(CellMetric<Integer> metric, CellCondition condition) {
-		int cellCount = ArtificialLife.getCellCount();
+		int cellCount = getCellCount(condition); // Number of cells satisfying the condition.
 		if(cellCount == 0) {
 			return 0;
 		}
@@ -95,6 +107,23 @@ class Metrics {
 			}
 		}
 		return M.median(dataList);
+	}
+	
+	public static int getTotal(CellMetric<Integer> metric, CellCondition condition) {
+		int cellCount = getCellCount(condition); // Number of cells satisfying the condition.
+		if(cellCount == 0) {
+			return 0;
+		}
+		int dataTotal = 0;
+		for(Stepable stepable : ArtificialLife.getStepList()){
+			if(stepable instanceof Cell){
+				Cell cell = (Cell)stepable;
+				if(condition.isSatisfiedBy(cell)) {
+					dataTotal += metric.data(cell);
+				}
+			}
+		}
+		return dataTotal;
 	}
 	
 	private interface CellCondition {
@@ -115,7 +144,7 @@ class Metrics {
 		}
 	}
 	
-	private interface CellMetric<X> {
+	public static interface CellMetric<X> {
 		public X data(Cell cell);
 	}
 }

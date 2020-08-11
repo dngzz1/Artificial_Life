@@ -24,7 +24,7 @@ class Creator extends WorldObject implements Stepable {
 	}
 	
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		case PUSH:
 			interacter.interact(this, Interaction.KILL, null);

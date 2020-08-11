@@ -3,7 +3,6 @@ DESIGN DOCUMENT: Artificial Life
 
 ~~ TO-DO ~~
 
-> Track species herbivory vs carnivory.
 > Properly balance cell energy input/output.
 > Test different setups for matrix-type cells: number of memory/concept neurons, number of concept neuron layers, mutation rates.
 > Improved saving/loading. Separate handling the map and the cells. More options.

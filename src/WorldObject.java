@@ -62,7 +62,7 @@ abstract class WorldObject {
 		return location.y;
 	}
 	
-	public abstract boolean interact(WorldObject interacter, Interaction interactionType, Object data);
+	public abstract boolean interact(WorldObject interacter, Interaction interactionType, Object[] data);
 	
 	public void remove() {
 		ArtificialLife.remove(this);

@@ -32,10 +32,10 @@ class DestructibleWall extends WorldObject implements Stepable {
 	}
 	
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		case ATTACK:
-			hit((Integer)data);
+			hit((Integer)data[0]);
 			return true;
 		default:
 			return false;
