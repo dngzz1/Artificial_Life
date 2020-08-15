@@ -30,9 +30,10 @@ class InfoWindow_Species extends JFrame implements ActionListener {
 			dataLabel_attackStrength, dataLabel_biteSize, dataLabel_buildStrength, dataLabel_energyCapacity, dataLabel_hp};
 	
 	// Action Buttons //
-	private static String[] actionButtonLabels = {"H"};
+	private static String[] actionButtonLabels = {"H", "R"};
 	private static JButton[] actionButton_highlight = new JButton[speciesListLength];
-	private static JButton[][] actionButtonLists = {actionButton_highlight};
+	private static JButton[] actionButton_rename = new JButton[speciesListLength];
+	private static JButton[][] actionButtonLists = {actionButton_highlight, actionButton_rename};
 	
 	private static LinkedList<Species> speciesList = new LinkedList<Species>();
 	
@@ -68,9 +69,19 @@ class InfoWindow_Species extends JFrame implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		for(int i = 0; i < speciesListLength; i ++) {
-			if(e.getSource() == actionButton_highlight[i]) {
-				if(i < speciesList.size()) {
+			if(i < speciesList.size()) {
+				if(e.getSource() == actionButton_highlight[i]) {
 					Display.highlightSpecies(speciesList.get(i));
+				}
+				if(e.getSource() == actionButton_rename[i]) {
+					String newCustomName = JOptionPane.showInputDialog("Enter a name for this species:");
+					if(newCustomName != null) {
+						if(newCustomName.equals("")) {
+							speciesList.get(i).setCustomName(null);
+						} else {
+							speciesList.get(i).setCustomName(newCustomName);
+						}
+					}
 				}
 			}
 		}
@@ -93,6 +104,7 @@ class InfoWindow_Species extends JFrame implements ActionListener {
 			for(int action = 0; action < actionButtonLists.length; action ++) {
 				actionButtonLists[action][row] = new JButton(actionButtonLabels[action]);
 				actionButtonLists[action][row].addActionListener(this);
+				actionButtonLists[action][row].setFocusable(false);
 				actionButtonPanel.add(actionButtonLists[action][row]);
 			}
 			
@@ -120,6 +132,7 @@ class InfoWindow_Species extends JFrame implements ActionListener {
 				dataLabel_energyCapacity[i].setText(getInfo(species, Metrics.energyCapacityMetric));
 				dataLabel_hp[i].setText(getInfo(species, Metrics.hpMetric));
 				actionButton_highlight[i].setEnabled(true);
+				actionButton_rename[i].setEnabled(true);
 			} else {
 				dataLabel_speciesName[i].setText("---");
 				dataLabel_cellCount[i].setText("---");
@@ -132,6 +145,7 @@ class InfoWindow_Species extends JFrame implements ActionListener {
 				dataLabel_energyCapacity[i].setText("---");
 				dataLabel_hp[i].setText("---");
 				actionButton_highlight[i].setEnabled(false);
+				actionButton_rename[i].setEnabled(false);
 			}
 		}
 		

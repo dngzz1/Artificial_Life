@@ -334,11 +334,19 @@ class MatrixCell extends Cell {
 		info += "speed = "+speed+"<br>"; 
 		info += "<br>";
 		info += "Metadata:"+"<br>";
-		info += "last action taken: "+lastActionTaken.name().toLowerCase()+"<br>";
+		info += "last action taken: "+getInfo_lastActionTaken()+"<br>";
 		info += "lifetime = "+lifetime+"<br>";
 		info += "food eaten = "+lifetimeFoodEaten+"<br>"; 
 		info += "number of children = "+children+"<br>"; 
 		return info;
+	}
+	
+	private String getInfo_lastActionTaken() {
+		if(lastActionTaken == null) {
+			return "-";
+		} else {
+			return lastActionTaken.name().toLowerCase();
+		}
 	}
 	
 	private void hit(int strength) {

@@ -10,7 +10,7 @@ class Species {
 	
 //	private static char[] characterList = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
 	
-	private String displayName;
+	private String customName = null;
 	private String code_generationZero, code_mutationSequence;
 	private int conceptNeuronCount, memoryNeuronCount;
 	
@@ -74,7 +74,6 @@ class Species {
 		memoryNeuronCount = M.randInt(memoryNeuronMin, memoryNeuronMax);
 		code_generationZero = conceptNeuronCount+"C"+memoryNeuronCount+"M";
 		code_mutationSequence = "";
-		setDisplayName();
 	}
 	
 	private Species(Species parentSpecies) {
@@ -82,11 +81,27 @@ class Species {
 		memoryNeuronCount = parentSpecies.memoryNeuronCount;
 		code_generationZero = parentSpecies.code_generationZero;
 		code_mutationSequence = parentSpecies.code_mutationSequence;
-		setDisplayName();
+		if(parentSpecies.customName != null) {
+			customName = parentSpecies.customName+"+";
+		}
 	}
 	
 	public String getDisplayName() {
-		return displayName;
+		if(customName == null) {
+			String displayName = code_generationZero;
+			int mutationSequenceLength = code_mutationSequence.length();
+			displayName += "-"+mutationSequenceLength;
+			if(mutationSequenceLength > 0) {
+				if(mutationSequenceLength <= 3) {
+					displayName += "-"+code_mutationSequence;
+				} else {
+					displayName += "-.."+code_mutationSequence.substring(mutationSequenceLength - 3);
+				}
+			}
+			return displayName;
+		} else {
+			return customName;
+		}
 	}
 	
 	public String getFullName() {
@@ -120,7 +135,6 @@ class Species {
 		default:
 			throw new RuntimeException("Species mutation failed.");
 		}
-		setDisplayName();
 	}
 	
 	private void mutate_conceptNeuronCount(MatrixCell cell) {
@@ -159,17 +173,8 @@ class Species {
 		return memoryNeuronCount;
 	}
 	
-	private void setDisplayName() {
-		displayName = code_generationZero;
-		int mutationSequenceLength = code_mutationSequence.length();
-		displayName += "-"+mutationSequenceLength;
-		if(mutationSequenceLength > 0) {
-			if(mutationSequenceLength <= 5) {
-				displayName += "-"+code_mutationSequence;
-			} else {
-				displayName += "-.."+code_mutationSequence.substring(mutationSequenceLength - 5);
-			}
-		}
+	public void setCustomName(String customName) {
+		this.customName = customName;
 	}
 }
 
