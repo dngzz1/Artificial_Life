@@ -1,6 +1,9 @@
 // These values are set when launching the game.
 // Lines starting with "//" are regarded as comments.
 
+autotest=no
+// Perform automated testing if set to "yes".
+
 fpsCap=30
 // Maximum frames per second when not in accelerated mode.
 

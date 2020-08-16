@@ -2,7 +2,6 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.Date;
 import java.util.LinkedList;
 
@@ -28,10 +27,6 @@ class ArtificialLife implements Runnable {
 	static int width, height;
 	static int minCellCount;
 	
-	static WorldObject[][] grid = new WorldObject[width][height];
-	
-	static TurnList turnList = new TurnList();
-	
 	static int stepCounter = 0;
 	static int totalChildren = 0;
 	static int totalChildrenWithTwoParents = 0;
@@ -39,94 +34,17 @@ class ArtificialLife implements Runnable {
 	
 	static Cell selectedCell = null;
 	
+	// The World //
+	static WorldObject[][] grid = new WorldObject[width][height];
+	static TurnList turnList = new TurnList();
+	
 	// Seasons //
 	static int seasonDuration = 1000;
 	static boolean isSummer = true;
 	
 	// Auto-test variables //
 	static boolean isAutotesting = false;
-	static int simulationNumber;
-	static String autoTestLogFilename;
-	static int numberOfSimulations;
-	static int simulationLength;
-	
-	private static void autoTest_start() {
-		System.out.println("AUTOTESTING");
-		System.out.println();
-		
-		// Get parameters from user. //
-		String numberOfSimulationsInput = JOptionPane.showInputDialog("Number of simulations:");
-		numberOfSimulations = Integer.parseInt(numberOfSimulationsInput);
-		String simulationLengthInput = JOptionPane.showInputDialog("Simulation length (steps):");
-		simulationLength = Integer.parseInt(simulationLengthInput);
-		
-		// Start printing log file. //
-		autoTestLogFilename = "logs/autoTestLog_"+new Date().getTime()+".txt";
-//		PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename);
-//		pw.println("AUTO-RUNNING "+numberOfSimulations+" SIMULATIONS FOR "+simulationLength+" STEPS EACH");
-//		pw.println();
-//		pw.println("sim = simulation number");
-//		pw.println("gen = latest generation");
-//		pw.println("#ch = total number of children");
-//		pw.println();
-//		pw.println("sim:gen:#ch");
-//		pw.close();
-		
-		// Begin simulation //
-		isAutotesting = true;
-		simulationNumber = 1;
-		Controls.setSpeed(Controls.SPEED_SETTING[9]);
-		new ArtificialLife().start();
-	}
-	
-	private static void autoTest_step() {
-		
-		if(stepCounter % 10000 == 0) {
-			PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename, true);
-			
-			double[] cellSizeList = new double[getCellCount()];
-			int i = 0;
-			for(Stepable stepable : getStepList()){
-				if(stepable instanceof Cell){
-					cellSizeList[i] = ((Cell)stepable).energyStoreSize;
-					i ++;
-				}
-			}
-			
-			String data = M.medianPercentile(cellSizeList, 10)
-					+":"+M.medianPercentile(cellSizeList, 30)
-					+":"+M.medianPercentile(cellSizeList, 50)
-					+":"+M.medianPercentile(cellSizeList, 70)
-					+":"+M.medianPercentile(cellSizeList, 90);
-			
-			pw.println(data);
-			pw.close();
-		}
-		
-		
-//		// If the simulation has reached the termination condition, we log the results and restart. //
-//		if(stepCounter >= simulationLength) {
-//			// Print the log of this simulation to file. //
-//			System.out.println("SIMULATION #"+simulationNumber+" COMPLETE");
-//			int generation = infoWindow.getGenerationCount(infoWindow.getLatestGeneration());
-//			PrintWriter pw = TextFileHandler.startWritingToFile(autoTestLogFilename, true);
-//			pw.println(simulationNumber+":"+generation+":"+ArtificialLife.totalChildren);
-//			pw.close();
-//			printGenerationToFile();
-//			
-//			simulationNumber ++;
-//			if(simulationNumber <= numberOfSimulations) {
-//				// Reset for the next simulation . //
-//				turnList.clear();
-//				ArtificialLife.setup();
-//				stepCounter = 0;
-//			} else {
-//				// End auto-test. //
-//				isRunning = false;
-//				System.exit(0);
-//			}
-//		}
-	}
+	static AutotestManager autotestManager = null;
 	
 	public static int getCellCount(){
 		int cellCount = 0;
@@ -381,26 +299,19 @@ class ArtificialLife implements Runnable {
 		}
 	}
 	
-	public static void main(String[] args) {
-		// Ask if we want to run auto-testing. //
-		boolean doAutotest = false; // Disabled for now.
-//		int choice = JOptionPane.showConfirmDialog(null, "Run Auto-testing?", "", JOptionPane.YES_NO_OPTION);
-//		boolean doAutotest = (choice == 0);
-//		if(choice == -1) {
-//			System.exit(0);
-//			return;
-//		}
-		
-		
+	public static void main(String[] args) {	
 		ArtificialLife.setup();
 		Controls.setup();
 		
 		// Auto-testing //
-		if(doAutotest) {
-			autoTest_start();
-		} else {
-			new ArtificialLife().start();
+		if(isAutotesting) {
+			autotestManager = new AutotestManager();
+			autotestManager.setup();
+			Controls.setSpeed(Controls.SPEED_SETTING[9]);
 		}
+		
+		// Start Simulation //
+		new ArtificialLife().start();
 	}
 	
 	public static boolean place(WorldObject object, int x, int y){
@@ -502,6 +413,9 @@ class ArtificialLife implements Runnable {
 			// Ignore comment lines. //
 			if(!line.startsWith("//")){
 				int dataIndex = line.indexOf("=") + 1;
+				if(line.startsWith("autotest=")){
+					isAutotesting = line.substring(dataIndex).equals("yes");
+				}
 				if(line.startsWith("fpsCap=")){
 					fpsCap = Integer.parseInt(line.substring(dataIndex));
 				}
@@ -661,7 +575,7 @@ class ArtificialLife implements Runnable {
 				}
 			}
 			if(isAutotesting) {
-				autoTest_step();
+				autotestManager.step();
 			}
 		}
 	}
