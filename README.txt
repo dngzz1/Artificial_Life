@@ -3,6 +3,11 @@
 An artificial life simulation. Populations of neural-networks-controlled cells evolve over time due to random mutation and natural selection.
 
 
+~~ Compiling ~~
+
+This project uses some external library classes. You can find these at https://github.com/CheeseyBob/Utilities 
+
+
 ~~ Installation ~~
 
 Requires Java. The data folder needs to be in the same directory as the jar file.

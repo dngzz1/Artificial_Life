@@ -158,7 +158,7 @@ class MatrixCell extends Cell {
 			WorldObject target = ArtificialLife.getObjectAt(targetPoint);
 			if(target != null){
 				energy -= energyCost;
-				return target.interact(this, Interaction.ATTACK, attackStrength);
+				return target.interact(this, Interaction.ATTACK, new Object[] {attackStrength});
 			}
 		}
 		return false;
@@ -179,7 +179,7 @@ class MatrixCell extends Cell {
 		Point targetPoint = getAdjacentLocation(facing);
 		WorldObject target = ArtificialLife.grid[targetPoint.x][targetPoint.y];
 		if(target != null){
-			return target.interact(this, Interaction.EAT, biteSize);
+			return target.interact(this, Interaction.EAT, new Object[] {biteSize});
 		} else {
 			return false;
 		}
@@ -334,11 +334,19 @@ class MatrixCell extends Cell {
 		info += "speed = "+speed+"<br>"; 
 		info += "<br>";
 		info += "Metadata:"+"<br>";
-		info += "last action taken: "+lastActionTaken.name().toLowerCase()+"<br>";
+		info += "last action taken: "+getInfo_lastActionTaken()+"<br>";
 		info += "lifetime = "+lifetime+"<br>";
 		info += "food eaten = "+lifetimeFoodEaten+"<br>"; 
 		info += "number of children = "+children+"<br>"; 
 		return info;
+	}
+	
+	private String getInfo_lastActionTaken() {
+		if(lastActionTaken == null) {
+			return "-";
+		} else {
+			return lastActionTaken.name().toLowerCase();
+		}
 	}
 	
 	private void hit(int strength) {
@@ -353,7 +361,7 @@ class MatrixCell extends Cell {
 		
 		
 		if(hp <= 0) {
-			Food remains = new Food(energy);
+			Food remains = new Food(energy, true);
 			energy = 0;
 			kill(CauseOfDeath.PREDATION);
 			ArtificialLife.place(remains, location);
@@ -393,20 +401,24 @@ class MatrixCell extends Cell {
 	}
 
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		case ATTACK:
-			hit((Integer)data);
+			hit((Integer)data[0]);
 			return true;
 		case DISPLACE:
 			return displace(interacter, this);
 		case GIVE_ENERGY:
-			int amount = (Integer)data;
+			int amount = (Integer)data[0];
+			boolean isFlesh = (Boolean)data[1];
 			energy = Math.min(energy + amount, getMaxStoredEnergy());
 			lifetimeFoodEaten += amount;
+			if(isFlesh) {
+				lifetimeFoodEatenByPredation += amount;
+			}
 			return true;
 		case KILL:
-			kill((CauseOfDeath)data);
+			kill((CauseOfDeath)data[0]);
 			return true;
 		case PULL:
 			return pull(interacter, this);

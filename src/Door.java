@@ -52,7 +52,7 @@ class Door extends WorldObject {
 	}
 
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		default:
 			return false;

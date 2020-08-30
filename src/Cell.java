@@ -35,6 +35,7 @@ abstract class Cell extends WorldObject implements Stepable {
 	int generation = 0;
 	int children = 0;
 	int lifetimeFoodEaten = 0;
+	int lifetimeFoodEatenByPredation = 0;
 	
 	// Cell Data //
 	int energy = energyUponBirth;

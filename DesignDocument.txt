@@ -3,7 +3,7 @@ DESIGN DOCUMENT: Artificial Life
 
 ~~ TO-DO ~~
 
-> Make a species info window.
+> Save the window positions so you don't have to rearrange them every time you start the program.
 > Properly balance cell energy input/output.
 > Test different setups for matrix-type cells: number of memory/concept neurons, number of concept neuron layers, mutation rates.
 > Improved saving/loading. Separate handling the map and the cells. More options.
@@ -17,5 +17,4 @@ DESIGN DOCUMENT: Artificial Life
 ~~ Bugs ~~
 
 > Neural network viewer needs to be updated to work with matrix-type cells.
-> Eye-markers need to be updated to work in non-map display mode.
 > Toggling map-mode sometimes doesn't work properly.

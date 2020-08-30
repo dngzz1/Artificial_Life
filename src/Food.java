@@ -3,20 +3,23 @@ import java.awt.Color;
 class Food extends WorldObject {
 	static int defaultFoodEnergy;
 	static Color color = Color.white;
+	static Color color_flesh = new Color(255, 153, 153);
 	
 	int energy;
+	boolean isFlesh;
 	
-	Food(int energy){
+	Food(int energy, boolean isFlesh){
 		this.energy = energy;
+		this.isFlesh = isFlesh;
 	}
 	
 	Food(){
-		this(defaultFoodEnergy);
+		this(defaultFoodEnergy, false);
 	}
 
 	@Override
 	public Color getColor() {
-		return color;
+		return isFlesh ? color_flesh : color;
 	}
 
 	@Override
@@ -30,17 +33,17 @@ class Food extends WorldObject {
 	}
 
 	@Override
-	public boolean interact(WorldObject interacter, Interaction interactionType, Object data) {
+	public boolean interact(WorldObject interacter, Interaction interactionType, Object[] data) {
 		switch (interactionType) {
 		case DISPLACE:
 			return false;//displace(interacter, this);
 		case EAT:
-			int amountEaten = (Integer)data;
+			int amountEaten = (Integer)data[0];
 			if(amountEaten >= energy) {
-				interacter.interact(this, Interaction.GIVE_ENERGY, Integer.valueOf(energy));
+				interacter.interact(this, Interaction.GIVE_ENERGY, new Object[] {Integer.valueOf(energy), isFlesh});
 				remove();
 			} else {
-				interacter.interact(this, Interaction.GIVE_ENERGY, Integer.valueOf(amountEaten));
+				interacter.interact(this, Interaction.GIVE_ENERGY, new Object[] {Integer.valueOf(amountEaten), isFlesh});
 				energy -= amountEaten;
 			}
 			return true;
